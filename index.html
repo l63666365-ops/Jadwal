@@ -411,10 +411,10 @@
     <div class="task-input-container">
         <input type="text" id="taskInput" placeholder="Ketik tugas baru...">
         
-        <input type="file" id="taskImageInput" accept="image/*" capture="environment" style="display: none;" multiple onchange="previewTaskImages(this)">
-        
+        <input type="file" id="taskImageInput" accept="image/*" style="display: none;" multiple onchange="previewTaskImages(this)">
+
         <button type="button" class="btn-add" onclick="bukaKamera(event)" style="font-size: 19px;">📷</button>
-        
+
         <button type="button" class="btn-add" onclick="addTask()">+</button>
     </div>
     <div id="imagePreviewContainer" style="display:none; margin-top:10px; text-align:left; display: flex; flex-wrap: wrap; gap: 5px;"></div>
