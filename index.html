@@ -411,9 +411,9 @@
     <div class="task-input-container">
         <input type="text" id="taskInput" placeholder="Ketik tugas baru...">
         
-        <input type="file" id="taskImageInput" accept="image/*" style="display: none;" multiple onchange="previewTaskImages(this)">
+ <input type="file" id="taskImageInput" accept="image/*" style="display: none;" multiple onchange="previewTaskImages(this)">
 
-        <button type="button" class="btn-add" onclick="bukaKamera(event)" style="font-size: 19px;">📷</button>
+<button type="button" class="btn-add" onclick="bukaKamera(event)" style="font-size: 19px;">📷</button>
 
         <button type="button" class="btn-add" onclick="addTask()">+</button>
     </div>
@@ -459,11 +459,11 @@
 
 <script>
     if (localStorage.getItem('isLoggedIn') !== 'true') {
-    window.location.href = 'login1.html'; // Tendang balik ke login kalau belum login
+    window.location.href = 'login.html'; // Tendang balik ke  kalau belum 
 }
     function bukaKamera(event) {
     if (event) event.preventDefault(); // Nahan biar nggak refresh halaman
-    // Samakan id-nya dengan yang ada di HTML kamu sayang
+    // Samakan id-nya dengan yang ada di HTML kamu 
     document.getElementById('taskImageInput').click();
 }
 
@@ -536,7 +536,7 @@
     let selectedImagesData = [];
 
     async function fetchJadwalDariSheet() {
-    // Pakai link sakti kamu yang baru ya sayang
+    // Pakai link sakti kamu yang baru ya 
     const urlGAS = "https://script.google.com/macros/s/AKfycbxIzFrxaG6eBW7TTSePHLpYMLTt7_BPr6RK996JuG382lT2HsWrOAMHw7PyWVAOPIQbvA/exec";
     
     try {
@@ -548,7 +548,7 @@
         const userKelasLogin = (localStorage.getItem("userKelas") || "").replace(/\s/g, "").toUpperCase();
 
         data.forEach(row => {
-            // Karena GAS pake nama kolom sebagai KEY, kita ambil nilainya sayang
+            // Karena GAS pake nama kolom sebagai KEY, kita ambil nilainya 
             let cols = Object.values(row); 
             if (cols[0] && cols[0] !== "") mK = cols[0];
             if (cols[1] && cols[1] !== "") mM = cols[1];
@@ -570,7 +570,7 @@
         localStorage.setItem('savedJadwal', JSON.stringify(jadwalData));
         renderSchedule();
     } catch (err) {
-        console.log("Gagal tarik data GAS sayang:", err);
+        console.log("Error:", err);
     }
 }
 
@@ -596,45 +596,59 @@
     setInterval(updateTime, 1000);
 
     function updateStatus() {
-        const now = new Date(); const currentTime = now.getHours() * 60 + now.getMinutes();
-        const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-        const todayName = days[now.getDay()];
-        const statNow = document.getElementById('stat-now'); const statNext = document.getElementById('stat-next');
+    const now = new Date(); 
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const todayName = days[now.getDay()];
+    
+    const statNow = document.getElementById('stat-now'); 
+    const statNext = document.getElementById('stat-next');
 
-        if(todayName === "Sabtu" || todayName === "Minggu") {
-            statNow.innerText = "Libur Akhir Pekan ✨"; statNext.innerText = ""; return;
-        }
+    if(todayName === "Sabtu" || todayName === "Minggu") {
+        statNow.innerText = "Libur Akhir Pekan ✨"; 
+        return;
+    }
 
-        const currentWeekJadwal = (getWeekNumber(now) % 2 === 0) ? "m2" : "m1";
-        const listMapel = jadwalData[currentWeekJadwal][todayName] || [];
-        let ongoing = null; let next = null;
+    const autoWeek = (getWeekNumber(now) % 2 === 0) ? "m2" : "m1";
+    const listMapel = jadwalData[autoWeek][todayName] || [];
+    let ongoing = null; 
+    let next = null;
 
-        for (let i = 0; i < listMapel.length; i++) {
-            const timeRange = listMapel[i][1].split('-');
-            const start = timeRange[0].split(':').map(Number);
-            const end = timeRange[1].split(':').map(Number);
-            const startTime = start[0] * 60 + start[1];
-            const endTime = end[0] * 60 + end[1];
+    for (let i = 0; i < listMapel.length; i++) {
+        // TRIK AJAIB: Kita ganti titik jadi titik dua secara otomatis di sini 
+        let timeStr = listMapel[i][1].replace(/\./g, ':').replace(/\s/g, ''); 
+        const timeRange = timeStr.split('-');
+        
+        if (!timeRange[1]) continue;
 
-            if (currentTime >= startTime && currentTime <= endTime) {
-                ongoing = { name: listMapel[i][0], end: endTime };
-                next = listMapel[i+1] ? { name: listMapel[i+1][0], start: listMapel[i+1][1].split('-')[0].split(':').map(Number) } : null;
-                break;
-            } else if (currentTime < startTime) {
-                next = { name: listMapel[i][0], start: start }; break;
-            }
-        }
+        const start = timeRange[0].split(':').map(Number);
+        const end = timeRange[1].split(':').map(Number);
+        
+        const startTime = start[0] * 60 + start[1];
+        const endTime = end[0] * 60 + end[1];
 
-        if (ongoing) {
-            statNow.innerText = `Sekarang: ${ongoing.name} (berakhir ${ongoing.end - currentTime} menit lagi)`;
-            statNext.innerText = next ? `Selanjutnya: ${next.name}` : "Selanjutnya: Jam Pulang 🎉";
-        } else if (next) {
-            statNow.innerText = `Istirahat`;
-            statNext.innerText = `Selanjutnya: ${next.name} (mulai ${next.start[0] * 60 + next.start[1] - currentTime} menit lagi)`;
-        } else {
-            statNow.innerText = "Semua mapel hari ini selesai 🏆"; statNext.innerText = "Waktunya istirahat";
+        if (currentTime >= startTime && currentTime < endTime) {
+            ongoing = { name: listMapel[i][0], end: endTime };
+            next = listMapel[i+1] ? { name: listMapel[i+1][0] } : null;
+            break;
+        } else if (currentTime < startTime) {
+            next = { name: listMapel[i][0], start: startTime }; 
+            break;
         }
     }
+
+    if (ongoing) {
+        statNow.innerText = `Sekarang: ${ongoing.name} (berakhir ${ongoing.end - currentTime} menit lagi)`;
+        statNext.innerText = next ? `Selanjutnya: ${next.name}` : "Selanjutnya: Jam Pulang 🎉";
+    } else if (next) {
+        statNow.innerText = `Istirahat`;
+        statNext.innerText = `Selanjutnya: ${next.name} (mulai ${next.start - currentTime} menit lagi)`;
+    } else {
+        statNow.innerText = "Semua mapel hari ini selesai 🏆"; 
+        statNext.innerText = "Waktunya istirahat";
+    }
+}
+
 
     function changeDay(offset) { currentViewDate.setDate(currentViewDate.getDate() + offset); renderSchedule(); }
     function setWeek(week) { currentWeekType = week; document.getElementById('btn-m1').classList.toggle('active', week === 'm1'); document.getElementById('btn-m2').classList.toggle('active', week === 'm2'); renderSchedule(); }
@@ -899,13 +913,13 @@ function closeImage() {
 }
 
 function logout() {
-    // Hapus status login biar bisa balik ke halaman login lagi
+    // Hapus status  biar bisa balik ke halaman  lagi
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userKelas');
     localStorage.removeItem('role');
     
-    // Balik ke halaman login
-    window.location.href = 'login1.html';
+    // Balik ke halaman 
+    window.location.href = 'login.html';
 }
 
 </script>
@@ -918,5 +932,31 @@ function logout() {
     
     <div id="modal-counter"></div>
 </div>
+<script>
+(function() {
+    function fixFontSize() {
+        // Kita bikin elemen palsu buat ngetes ukuran font asli dari sistem HP
+        var testDiv = document.createElement('div');
+        testDiv.style.cssText = 'width:1rem;display:none !important';
+        document.body.appendChild(testDiv);
+        
+        // Kita itung berapa pixel 1rem di HP itu (normalnya 16px)
+        var actualSize = parseFloat(window.getComputedStyle(testDiv).getPropertyValue('width'));
+        
+        if (actualSize !== 16) {
+            // Kalau HP temen kamu font-nya disetel gede, kita hitung rasionya
+            var scale = 16 / actualSize;
+            // Kita paksa ukuran dasar HTML-nya ngecil biar tampilannya tetep pas
+            document.documentElement.style.fontSize = (scale * 100) + '%';
+        }
+        
+        document.body.removeChild(testDiv);
+    }
+    
+    // Jalankan pas aplikasi dibuka
+    fixFontSize();
+})();
+</script>
+
 </body>
-</html>
+    </html>
