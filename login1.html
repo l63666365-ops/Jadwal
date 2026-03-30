@@ -288,6 +288,30 @@ Swal.fire({
         errorBox.style.display = 'block';
     }
 }
+
+(function() {
+    function fixFontSize() {
+        // Kita bikin elemen palsu buat ngetes ukuran font asli dari sistem HP
+        var testDiv = document.createElement('div');
+        testDiv.style.cssText = 'width:1rem;display:none !important';
+        document.body.appendChild(testDiv);
+        
+        // Kita itung berapa pixel 1rem di HP itu (normalnya 16px)
+        var actualSize = parseFloat(window.getComputedStyle(testDiv).getPropertyValue('width'));
+        
+        if (actualSize !== 16) {
+            // Kalau HP temen kamu font-nya disetel gede, kita hitung rasionya
+            var scale = 16 / actualSize;
+            // Kita paksa ukuran dasar HTML-nya ngecil biar tampilannya tetep pas
+            document.documentElement.style.fontSize = (scale * 100) + '%';
+        }
+        
+        document.body.removeChild(testDiv);
+    }
+    
+    // Jalankan pas aplikasi dibuka
+    fixFontSize();
+})();
 </script>
 </body>
-</html>
+    </html>
