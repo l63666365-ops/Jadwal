@@ -913,14 +913,13 @@ function closeImage() {
 }
 
 function logout() {
-    // 1. Bersihin semua data login biar aman
-    localStorage.clear();
+    // Hapus status  biar bisa balik ke halaman  lagi
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userKelas');
+    localStorage.removeItem('role');
     
-    // 2. Ambil alamat dasar (root) biar gak nyasar ke folder aneh-aneh
-    const rootPath = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/');
-    
-    // 3. Paksa balik ke login.html yang satu folder sama index
-    window.location.replace(rootPath + "/login.html");
+    // Balik ke halaman 
+    window.location.href = './login.html';
 }
 
 </script>
