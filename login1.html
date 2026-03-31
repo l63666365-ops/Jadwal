@@ -270,20 +270,12 @@
                 localStorage.setItem('role', 'user');
                 localStorage.setItem('isLoggedIn', 'true');
                 window.location.href = './index.html';
-            } else {
-                // Email bener tapi ID gak kedaftar di list kelas
-                Swal.fire({
-                    title: 'ID Tidak Dikenali',
-                    text: 'Email sekolah bener, tapi ID kamu belum masuk list kelas sayang.',
-                    icon: 'warning',
-                    confirmButtonColor: '#00203F'
-                });
-            }
+        
         } else {
             // Email bukan domain sekolah
             Swal.fire({
                 title: 'Akses Ditolak!',
-                text: 'Mohon gunakan email sekolah ya sayang!',
+                text: 'Mohon gunakan email sekolah!',
                 icon: 'error',
                 confirmButtonColor: '#00203F'
             });
