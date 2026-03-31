@@ -232,21 +232,36 @@
 
    function handleLogin() {
     const email = document.getElementById('username').value;
+    const pass = document.getElementById('password').value; 
+    const errorBox = document.getElementById('errorBox');
     const btn = document.getElementById('loginBtn');
-    if (email.toLowerCase().endsWith("@smkn2sragen.sch.id")) {
+
+    // 1. Cek apakah email mengandung domain sekolah
+    if (email.toLowerCase().includes("@smkn2sragen.sch.id")) {
+        // Kalau bener, simpan status login dan langsung masuk
         localStorage.setItem('isLoggedIn', 'true');
+        
+        // Simpan juga emailnya buat jaga-jaga kalau butuh data kelas nanti
+        localStorage.setItem('userEmail', email.toLowerCase());
+        
         window.location.href = "index.html"; 
     } else {
+        // 2. Kalau salah, baru keluarin peringatan SweetAlert-nya
         Swal.fire({
             title: 'Akses Ditolak!',
             text: 'Mohon gunakan email sekolah!',
             icon: 'error',
             confirmButtonColor: '#00203F', 
             confirmButtonText: 'Oke',
-            background: '#ffffff'
+            background: '#ffffff',
+            borderRadius: '15px'
         });
+        
+        // Kasih pesan juga di errorBox kalau kamu pake itu di tampilan
+        if(errorBox) errorBox.innerText = "Email tidak valid!";
     }
-   }
+}
+
 
     const idStr = email.split('@')[0];
     const id = parseInt(idStr);
