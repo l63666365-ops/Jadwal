@@ -209,125 +209,102 @@
 
 <script>
     window.onload = function() {
-    // Kalau udah pernah login, langsung lempar ke jadwal
-    if (localStorage.getItem('isLoggedIn') === 'true') {
-        window.location.href = './index.html';
-    }
-};
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            window.location.href = './index.html';
+        }
+    };
 
     function togglePassword() {
         const passInput = document.getElementById('password');
         const eyeIcon = document.getElementById('eyeIcon');
-        
         if (passInput.type === 'password') {
             passInput.type = 'text';
-            // Ubah jadi mata coret (SVG)
             eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
         } else {
             passInput.type = 'password';
-            // Balik ke mata biasa (SVG)
             eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
         }
     }
 
-   function handleLogin() {
-    const email = document.getElementById('username').value;
-    const pass = document.getElementById('password').value; 
-    const errorBox = document.getElementById('errorBox');
-    const btn = document.getElementById('loginBtn');
-
-    // 1. Cek apakah email mengandung domain sekolah
-    if (email.toLowerCase().includes("@smkn2sragen.sch.id")) {
-        // Kalau bener, simpan status login dan langsung masuk
-        localStorage.setItem('isLoggedIn', 'true');
+    function handleLogin() {
+        const email = document.getElementById('username').value.toLowerCase();
+        const errorBox = document.getElementById('errorBox');
         
-        // Simpan juga emailnya buat jaga-jaga kalau butuh data kelas nanti
-        localStorage.setItem('userEmail', email.toLowerCase());
-        
-        window.location.href = "index.html"; 
-    } else {
-        // 2. Kalau salah, baru keluarin peringatan SweetAlert-nya
-        Swal.fire({
-            title: 'Akses Ditolak!',
-            text: 'Mohon gunakan email sekolah!',
-            icon: 'error',
-            confirmButtonColor: '#00203F', 
-            confirmButtonText: 'Oke',
-            background: '#ffffff',
-            borderRadius: '15px'
-        });
-        
-        // Kasih pesan juga di errorBox kalau kamu pake itu di tampilan
-        if(errorBox) errorBox.innerText = "Email tidak valid!";
-    }
-}
-
-
-    const idStr = email.split('@')[0];
-    const id = parseInt(idStr);
-    let kelas = "";
-
-    // Logika pembagian kelas berdasarkan ID
-    if (id >= 12075 && id <= 12110) kelas = "TKP 1";
-    else if (id >= 12111 && id <= 12145) kelas = "TKP 2";
-    else if (id >= 12146 && id <= 12181) kelas = "DPIB 1";
-    else if (id >= 12182 && id <= 12217) kelas = "DPIB 2";
-    else if (id >= 12218 && id <= 12253) kelas = "TP 1";
-    else if (id >= 12254 && id <= 12289) kelas = "TP 2";
-    else if (id >= 12290 && id <= 12324) kelas = "TP 3";
-    else if (id >= 12325 && id <= 12359) kelas = "TP 4";
-    else if (id >= 12360 && id <= 12395) kelas = "TKR 1";
-    else if (id >= 12396 && id <= 12431) kelas = "TKR 2";
-    else if (id >= 12432 && id <= 12467) kelas = "TKR 3";
-    else if (id >= 12468 && id <= 12503) kelas = "TKR 4";
-    else if (id >= 12504 && id <= 12539) kelas = "TITL 1";
-    else if (id >= 12540 && id <= 12575) kelas = "TITL 2";
-    else if (id >= 12576 && id <= 12611) kelas = "TITL 3";
-    else if (id >= 12612 && id <= 12647) kelas = "TITL 4";
-    else if (id >= 12648 && id <= 12683) kelas = "TKJ 1";
-    else if (id >= 12684 && id <= 12719) kelas = "TKJ 2";
-
-    // Khusus Admin
-    if (email === "admin@smkn2sragen.sch.id") {
-        localStorage.setItem('role', 'admin');
-        localStorage.setItem('isLoggedIn', 'true');
-        window.location.href = './index.html';
-        return;
-    }
-
-    if (kelas !== "") {
-        localStorage.setItem('userKelas', kelas);
-        localStorage.setItem('role', 'user');
-        localStorage.setItem('isLoggedIn', 'true');
-        window.location.href = './index.html';
-    } else {
-        errorBox.style.display = 'block';
-    }
-}
-
-(function() {
-    function fixFontSize() {
-        // Kita bikin elemen palsu buat ngetes ukuran font asli dari sistem HP
-        var testDiv = document.createElement('div');
-        testDiv.style.cssText = 'width:1rem;display:none !important';
-        document.body.appendChild(testDiv);
-        
-        // Kita itung berapa pixel 1rem di HP itu (normalnya 16px)
-        var actualSize = parseFloat(window.getComputedStyle(testDiv).getPropertyValue('width'));
-        
-        if (actualSize !== 16) {
-            // Kalau HP temen kamu font-nya disetel gede, kita hitung rasionya
-            var scale = 16 / actualSize;
-            // Kita paksa ukuran dasar HTML-nya ngecil biar tampilannya tetep pas
-            document.documentElement.style.fontSize = (scale * 100) + '%';
+        // 1. Cek Email Khusus Admin
+        if (email === "admin@smkn2sragen.sch.id") {
+            localStorage.setItem('role', 'admin');
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userKelas', 'ADMIN');
+            window.location.href = './index.html';
+            return;
         }
-        
-        document.body.removeChild(testDiv);
+
+        // 2. Cek Domain Sekolah
+        if (email.endsWith("@smkn2sragen.sch.id")) {
+            const idStr = email.split('@')[0];
+            const id = parseInt(idStr);
+            let kelas = "";
+
+            // Logika pembagian kelas berdasarkan ID
+            if (id >= 12075 && id <= 12110) kelas = "TKP 1";
+            else if (id >= 12111 && id <= 12145) kelas = "TKP 2";
+            else if (id >= 12146 && id <= 12181) kelas = "DPIB 1";
+            else if (id >= 12182 && id <= 12217) kelas = "DPIB 2";
+            else if (id >= 12218 && id <= 12253) kelas = "TP 1";
+            else if (id >= 12254 && id <= 12289) kelas = "TP 2";
+            else if (id >= 12290 && id <= 12324) kelas = "TP 3";
+            else if (id >= 12325 && id <= 12359) kelas = "TP 4";
+            else if (id >= 12360 && id <= 12395) kelas = "TKR 1";
+            else if (id >= 12396 && id <= 12431) kelas = "TKR 2";
+            else if (id >= 12432 && id <= 12467) kelas = "TKR 3";
+            else if (id >= 12468 && id <= 12503) kelas = "TKR 4";
+            else if (id >= 12504 && id <= 12539) kelas = "TITL 1";
+            else if (id >= 12540 && id <= 12575) kelas = "TITL 2";
+            else if (id >= 12576 && id <= 12611) kelas = "TITL 3";
+            else if (id >= 12612 && id <= 12647) kelas = "TITL 4";
+            else if (id >= 12648 && id <= 12683) kelas = "TKJ 1";
+            else if (id >= 12684 && id <= 12719) kelas = "TKJ 2";
+
+            if (kelas !== "") {
+                localStorage.setItem('userKelas', kelas);
+                localStorage.setItem('role', 'user');
+                localStorage.setItem('isLoggedIn', 'true');
+                window.location.href = './index.html';
+            } else {
+                // Email bener tapi ID gak kedaftar di list kelas
+                Swal.fire({
+                    title: 'ID Tidak Dikenali',
+                    text: 'Email sekolah bener, tapi ID kamu belum masuk list kelas sayang.',
+                    icon: 'warning',
+                    confirmButtonColor: '#00203F'
+                });
+            }
+        } else {
+            // Email bukan domain sekolah
+            Swal.fire({
+                title: 'Akses Ditolak!',
+                text: 'Mohon gunakan email sekolah ya sayang!',
+                icon: 'error',
+                confirmButtonColor: '#00203F'
+            });
+            if(errorBox) errorBox.style.display = 'block';
+        }
     }
-    
-    // Jalankan pas aplikasi dibuka
-    fixFontSize();
-})();
+
+    (function() {
+        function fixFontSize() {
+            var testDiv = document.createElement('div');
+            testDiv.style.cssText = 'width:1rem;display:none !important';
+            document.body.appendChild(testDiv);
+            var actualSize = parseFloat(window.getComputedStyle(testDiv).getPropertyValue('width'));
+            if (actualSize !== 16) {
+                var scale = 16 / actualSize;
+                document.documentElement.style.fontSize = (scale * 100) + '%';
+            }
+            document.body.removeChild(testDiv);
+        }
+        fixFontSize();
+    })();
 </script>
 </body>
 </html>
