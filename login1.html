@@ -232,20 +232,21 @@
 
    function handleLogin() {
     const email = document.getElementById('username').value;
-    const pass = document.getElementById('password').value; // Password bebas sesuai request
-    const errorBox = document.getElementById('errorBox');
     const btn = document.getElementById('loginBtn');
-
-    // Ganti alert lama kamu pakai ini ya 
-Swal.fire({
-    title: 'Akses Ditolak!',
-    text: 'Mohon gunakan email sekolah!',
-    icon: 'error',
-    confirmButtonColor: '#00203F', // Sesuaikan sama warna biru kamu
-    confirmButtonText: 'Oke',
-    background: '#ffffff',
-    borderRadius: '15px'
-});
+    if (email.toLowerCase().endsWith("@smkn2sragen.sch.id")) {
+        localStorage.setItem('isLoggedIn', 'true');
+        window.location.href = "index.html"; 
+    } else {
+        Swal.fire({
+            title: 'Akses Ditolak!',
+            text: 'Mohon gunakan email sekolah!',
+            icon: 'error',
+            confirmButtonColor: '#00203F', 
+            confirmButtonText: 'Oke',
+            background: '#ffffff'
+        });
+    }
+   }
 
     const idStr = email.split('@')[0];
     const id = parseInt(idStr);
