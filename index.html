@@ -459,7 +459,7 @@
 
 <script>
     if (localStorage.getItem('isLoggedIn') !== 'true') {
-    window.location.href = './login.html'; // Tendang balik ke  kalau belum 
+    window.location.href = './login1.html'; // Tendang balik ke  kalau belum 
 }
     function bukaKamera(event) {
     if (event) event.preventDefault(); // Nahan biar nggak refresh halaman
@@ -913,15 +913,14 @@ function closeImage() {
 }
 
 function logout() {
-    // 1. Bersihin semua data login biar aman
-    localStorage.clear();
+    // Hapus status  biar bisa balik ke halaman  lagi
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userKelas');
+    localStorage.removeItem('role');
     
-    // 2. Ambil alamat dasar (root) biar gak nyasar ke folder aneh-aneh
-    const rootPath = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/');
-    
-    // 3. Paksa balik ke login.html yang satu folder sama index
-    window.location.replace(rootPath + "/login.html");
-}
+    // Balik ke halaman 
+    window.location.href = './login1.html';
+    }
 
 </script>
       <div id="imageModal" class="modal-overlay">
