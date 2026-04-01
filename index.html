@@ -361,7 +361,8 @@
 .schedule-grid { animation-delay: 0.4s; }
 .task-section { animation-delay: 0.5s; }
 #btn-edit-mode { animation-delay: 0.6s; }
-
+    
+    /* CSS biar input tugas bisa di-enter ke bawah */
 #taskInput { 
     flex-grow: 1; 
     background: var(--white); 
@@ -381,6 +382,21 @@
 #taskInput:focus { 
     border-color: var(--color-2); 
     height: 48px; /* Otomatis agak tinggi pas diklik biar lega ngetiknya */
+}
+
+@keyframes slideSwap {
+    0% {
+        opacity: 0;
+        transform: translateX(25px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-swap {
+    animation: slideSwap 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 }
 
 </style>
@@ -683,7 +699,27 @@
 }
 
 
-    function changeDay(offset) { currentViewDate.setDate(currentViewDate.getDate() + offset); renderSchedule(); }
+    function changeDay(offset) {
+    const grid = document.getElementById('main-grid');
+    const dayDisplay = document.getElementById('display-day');
+
+    // 1. Hapus class lama dulu biar bisa di-trigger ulang
+    grid.classList.remove('animate-swap');
+    dayDisplay.classList.remove('animate-swap');
+
+    // 2. Trik "Magic Reflow" biar browser sadar ada reset animasi
+    void grid.offsetWidth; 
+    void dayDisplay.offsetWidth;
+
+    // 3. Jalankan logika ganti tanggalnya
+    currentViewDate.setDate(currentViewDate.getDate() + offset);
+    renderSchedule();
+
+    // 4. Pasang lagi class animasinya
+    grid.classList.add('animate-swap');
+    dayDisplay.classList.add('animate-swap');
+}
+
     function setWeek(week) { currentWeekType = week; document.getElementById('btn-m1').classList.toggle('active', week === 'm1'); document.getElementById('btn-m2').classList.toggle('active', week === 'm2'); renderSchedule(); }
     
     function toggleEditMode() { 
@@ -1006,4 +1042,4 @@ function logout() {
     <div id="modal-counter"></div>
 </div>
 </body>
-    </html>
+            </html>
