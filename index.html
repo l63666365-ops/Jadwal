@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0.85, maximum-scale=0.85, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=0.92, maximum-scale=0.92, user-scalable=no">
     <title>Jadwal Sekolah Pro - Ocean Indigo Theme</title>
     <style>
         
@@ -193,7 +193,16 @@
         .task-item.done span { text-decoration: line-through; color: var(--color-3); }
         
         .task-check { width: 18px; height: 18px; cursor: pointer; accent-color: var(--color-2); }
-        .task-text { flex-grow: 1; font-size: 14px; cursor: pointer; text-align: left; }
+        .task-text {
+    flex-grow: 1;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    padding-right: 40px !important;
+    /* INI KUNCINYA */
+    white-space: pre-wrap; /* Biar enter dan spasi tetep muncul */
+    word-wrap: break-word; /* Biar kata yang kepanjangan nggak nabrak samping */
+}
 
         .task-img { display: block; max-width: 100%; border-radius: 8px; margin-top: 8px; border: 1px solid var(--color-5); cursor: pointer; }
 
@@ -352,6 +361,29 @@
 .schedule-grid { animation-delay: 0.4s; }
 .task-section { animation-delay: 0.5s; }
 #btn-edit-mode { animation-delay: 0.6s; }
+    
+    /* CSS biar input tugas bisa di-enter ke bawah */
+#taskInput { 
+    flex-grow: 1; 
+    background: var(--white); 
+    border: 2px solid var(--color-4); 
+    padding: 12px; 
+    border-radius: 12px; 
+    color: var(--color-1); 
+    font-weight: 600; 
+    outline: none; 
+    resize: none; /* Biar user nggak bisa narik pojokan box */
+    font-family: inherit;
+    font-size: 14px;
+    height: 45px; /* Tinggi awal */
+    transition: border-color 0.3s;
+}
+
+#taskInput:focus { 
+    border-color: var(--color-2); 
+    height: 70px; /* Otomatis agak tinggi pas diklik biar lega ngetiknya */
+}
+
 </style>
 </head>
 <body>
@@ -410,14 +442,14 @@
   <div class="task-section">
     <p style="font-size: 13px; font-weight: bold; margin-bottom: 5px; color: var(--color-2);">DAFTAR TUGAS:</p>
     <div class="task-input-container">
-        <input type="text" id="taskInput" placeholder="Ketik tugas baru...">
-        
- <input type="file" id="taskImageInput" accept="image/*" style="display: none;" multiple onchange="previewTaskImages(this)">
+    <textarea id="taskInput" placeholder="Ketik tugas baru..."></textarea>
+    
+    <input type="file" id="taskImageInput" accept="image/*" style="display: none;" multiple onchange="previewTaskImages(this)">
 
-<button type="button" class="btn-add" onclick="bukaKamera(event)" style="font-size: 19px;">📷</button>
+    <button type="button" class="btn-add" onclick="bukaKamera(event)" style="font-size: 19px;">📷</button>
+    <button type="button" class="btn-add" onclick="addTask()">+</button>
+</div>
 
-        <button type="button" class="btn-add" onclick="addTask()">+</button>
-    </div>
     <div id="imagePreviewContainer" style="display:none; margin-top:10px; text-align:left; display: flex; flex-wrap: wrap; gap: 5px;"></div>
     <ul class="task-list" id="taskList"></ul>
 </div>
@@ -879,13 +911,19 @@ t.images.forEach((imgSrc, imgIndex) => {
 
 
     function addTask() {
-        const input = document.getElementById('taskInput'); 
-        if (input.value.trim() === "" && selectedImagesData.length === 0) return;
-        const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
-        tasks.push({ text: input.value, images: [...selectedImagesData], done: false }); 
-        localStorage.setItem('mySchoolTasks', JSON.stringify(tasks));
-        input.value = ""; cancelImage(); loadTasks();
-    }
+    const input = document.getElementById('taskInput'); 
+    if (input.value.trim() === "" && selectedImagesData.length === 0) return;
+    const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
+    tasks.push({ text: input.value, images: [...selectedImagesData], done: false }); 
+    localStorage.setItem('mySchoolTasks', JSON.stringify(tasks));
+    
+    input.value = ""; 
+    input.style.height = "45px"; // Reset tinggi kotak setelah nambah tugas
+    cancelImage(); 
+    loadTasks();
+}
+
+            
     function toggleTask(i) { const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')); tasks[i].done = !tasks[i].done; localStorage.setItem('mySchoolTasks', JSON.stringify(tasks)); loadTasks(); }
     function deleteTask(i) { const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')); tasks.splice(i, 1); localStorage.setItem('mySchoolTasks', JSON.stringify(tasks)); loadTasks(); }
     
