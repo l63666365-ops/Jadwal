@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=0.92, maximum-scale=0.92, user-scalable=no">
     <title>Jadwal Sekolah Pro - Ocean Indigo Theme</title>
     <style>
+        
         /* IMPORT FONT BIAR LEBIH ESTETIK */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
 
@@ -459,7 +460,7 @@
 
 <script>
     if (localStorage.getItem('isLoggedIn') !== 'true') {
-    window.location.href = './login.html'; // Tendang balik ke  kalau belum 
+    window.location.href = 'login.html'; // Tendang balik ke  kalau belum 
 }
     function bukaKamera(event) {
     if (event) event.preventDefault(); // Nahan biar nggak refresh halaman
@@ -604,42 +605,33 @@
     const statNow = document.getElementById('stat-now'); 
     const statNext = document.getElementById('stat-next');
 
-    // Reset semua warna baris dulu biar nggak biru semua sayang
-    document.querySelectorAll('.row-mapel').forEach(row => {
-        row.classList.remove('active-row');
-    });
-
     if(todayName === "Sabtu" || todayName === "Minggu") {
-        if(statNow) statNow.innerText = "Libur Akhir Pekan ✨"; 
+        statNow.innerText = "Libur Akhir Pekan ✨"; 
+        statNext.innerText = ""; 
         return;
     }
 
-    // Ambil data minggu aktif (sesuaikan variabel minggu kamu ya sayang)
-    const autoWeek = (getWeekNumber(now) % 2 === 0) ? "Minggu 2" : "Minggu 1";
+    const autoWeek = (getWeekNumber(now) % 2 === 0) ? "m2" : "m1";
     const listMapel = jadwalData[autoWeek][todayName] || [];
     let ongoing = null; 
     let next = null;
 
     for (let i = 0; i < listMapel.length; i++) {
-        // Bersihin format jam dari Spreadsheet (titik jadi titik dua)
-        let timeStr = listMapel[i][1].toString().replace(/\./g, ':').replace(/\s/g, ''); 
+        // TRIK AJAIB: Kita ganti titik jadi titik dua secara otomatis di sini 
+        let timeStr = listMapel[i][1].replace(/\./g, ':').replace(/\s/g, ''); 
         const timeRange = timeStr.split('-');
         
-        if (timeRange.length < 2) continue;
+        if (!timeRange[1]) continue;
 
-        const startParts = timeRange[0].split(':').map(Number);
-        const endParts = timeRange[1].split(':').map(Number);
+        const start = timeRange[0].split(':').map(Number);
+        const end = timeRange[1].split(':').map(Number);
         
-        const startTime = startParts[0] * 60 + (startParts[1] || 0);
-        const endTime = endParts[0] * 60 + (endParts[1] || 0);
+        const startTime = start[0] * 60 + start[1];
+        const endTime = end[0] * 60 + end[1];
 
         if (currentTime >= startTime && currentTime < endTime) {
-            ongoing = { name: listMapel[i][0], end: endTime, index: i };
+            ongoing = { name: listMapel[i][0], end: endTime };
             next = listMapel[i+1] ? { name: listMapel[i+1][0] } : null;
-            
-            // INI KUNCINYA: Kasih warna ke baris yang sesuai index-nya
-            const currentRow = document.getElementById(`row-${i}`);
-            if (currentRow) currentRow.classList.add('active-row');
             break;
         } else if (currentTime < startTime) {
             next = { name: listMapel[i][0], start: startTime }; 
@@ -647,7 +639,6 @@
         }
     }
 
-    // Update teks status di header
     if (ongoing) {
         statNow.innerText = `Sekarang: ${ongoing.name} (berakhir ${ongoing.end - currentTime} menit lagi)`;
         statNext.innerText = next ? `Selanjutnya: ${next.name}` : "Selanjutnya: Jam Pulang 🎉";
@@ -659,6 +650,7 @@
         statNext.innerText = "Waktunya istirahat";
     }
 }
+
 
     function changeDay(offset) { currentViewDate.setDate(currentViewDate.getDate() + offset); renderSchedule(); }
     function setWeek(week) { currentWeekType = week; document.getElementById('btn-m1').classList.toggle('active', week === 'm1'); document.getElementById('btn-m2').classList.toggle('active', week === 'm2'); renderSchedule(); }
@@ -681,58 +673,71 @@
     }
     
     function renderSchedule() {
-        const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-        const dayName = days[currentViewDate.getDay()];
-        const isLibur = (dayName === "Sabtu" || dayName === "Minggu");
+    const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const dayName = days[currentViewDate.getDay()];
+    const isLibur = (dayName === "Sabtu" || dayName === "Minggu");
 
-        document.getElementById('display-day').innerText = currentViewDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
-        const colMapel = document.getElementById('col-mapel'); const colJam = document.getElementById('col-jam'); const colRuang = document.getElementById('col-ruang');
-        colMapel.innerHTML = ""; colJam.innerHTML = ""; colRuang.innerHTML = "";
-        
-        if(isLibur && !isEditMode) {
-            colMapel.innerHTML = "<div class='item-box' style='border-left-color:#eee'>Libur</div>"; 
-            colJam.innerHTML = "<div class='item-box'>-</div>"; 
-            colRuang.innerHTML = "<div class='item-box'>-</div>"; 
-            return;
-        }
-
-        const hariIni = jadwalData[currentWeekType][dayName] || [];
-        
-        if (isLibur && isEditMode && hariIni.length === 0) {
-            colMapel.innerHTML = "<div class='item-box' style='color:var(--color-3)'>Isi jadwal libur?</div>";
-            colJam.innerHTML = "<div class='item-box'>-</div>";
-            colRuang.innerHTML = "<div class='item-box'>-</div>";
-        }
-
-        hariIni.forEach((item, index) => {
-            if (isEditMode) {
-                const tp = item[1].split('-');
-                colMapel.innerHTML += `<div class="item-box" style="position: relative;"><button class="btn-delete-row" onclick="deleteRow(${index})">×</button><input class="input-edit" id="edit-mapel-${index}" value="${item[0]}"></div>`;
-                colJam.innerHTML += `<div class="item-box"><input type="time" class="input-edit" id="edit-jam-start-${index}" value="${tp[0]}"> s/d <input type="time" class="input-edit" id="edit-jam-end-${index}" value="${tp[1]}"></div>`;
-                colRuang.innerHTML += `<div class="item-box"><input class="input-edit" id="edit-ruang-${index}" value="${item[2]}"></div>`;
-            } else {
-                colMapel.innerHTML += `<div class="item-box" id="mapel-${index}">${item[0]}</div>`;
-                colJam.innerHTML += `<div class="item-box" id="jam-${index}">${item[1]}</div>`;
-                colRuang.innerHTML += `<div class="item-box" id="ruang-${index}">${item[2]}</div>`;
-            }
-        });
-        if(!isEditMode) checkHighlight();
+    document.getElementById('display-day').innerText = currentViewDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
+    const colMapel = document.getElementById('col-mapel'); 
+    const colJam = document.getElementById('col-jam'); 
+    const colRuang = document.getElementById('col-ruang');
+    colMapel.innerHTML = ""; colJam.innerHTML = ""; colRuang.innerHTML = "";
+    
+    if(isLibur && !isEditMode) {
+        colMapel.innerHTML = "<div class='item-box' style='border-left-color:#eee'>Libur</div>"; 
+        colJam.innerHTML = "<div class='item-box'>-</div>"; 
+        colRuang.innerHTML = "<div class='item-box'>-</div>"; 
+        return;
     }
+
+    const hariIni = jadwalData[currentWeekType][dayName] || [];
+
+    hariIni.forEach((item, index) => {
+        if (isEditMode) {
+            // PROSES JAM: Ganti titik jadi titik dua agar terbaca input type="time"
+            let jamRaw = item[1].replace(/\./g, ':');
+            let tp = jamRaw.split('-');
+            let jamStart = (tp[0] || "").trim();
+            let jamEnd = (tp[1] || "").trim();
+
+            colMapel.innerHTML += `<div class="item-box" style="position: relative;"><button class="btn-delete-row" onclick="deleteRow(${index})">×</button><input class="input-edit" id="edit-mapel-${index}" value="${item[0]}"></div>`;
+            colJam.innerHTML += `<div class="item-box">
+                <input type="time" class="input-edit" id="edit-jam-start-${index}" value="${jamStart}"> 
+                <span style="font-size:10px">s/d</span> 
+                <input type="time" class="input-edit" id="edit-jam-end-${index}" value="${jamEnd}">
+            </div>`;
+            colRuang.innerHTML += `<div class="item-box"><input class="input-edit" id="edit-ruang-${index}" value="${item[2]}"></div>`;
+            
+        } else {
+            colMapel.innerHTML += `<div class="item-box" id="mapel-${index}">${item[0]}</div>`;
+            colJam.innerHTML += `<div class="item-box" id="jam-${index}">${item[1]}</div>`;
+            colRuang.innerHTML += `<div class="item-box" id="ruang-${index}">${item[2]}</div>`;
+        }
+    });
+    if(!isEditMode) checkHighlight();
+}
+
 
     function saveTemporarily() {
-        const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-        const dayName = days[currentViewDate.getDay()];
-        const tempJadwal = [];
-        const mapelInputs = document.querySelectorAll('#col-mapel .input-edit');
-        mapelInputs.forEach((_, index) => {
-            const m = document.getElementById(`edit-mapel-${index}`).value;
-            const js = document.getElementById(`edit-jam-start-${index}`).value;
-            const je = document.getElementById(`edit-jam-end-${index}`).value;
-            const r = document.getElementById(`edit-ruang-${index}`).value;
-            tempJadwal.push([m, `${js}-${je}`, r]);
-        });
-        jadwalData[currentWeekType][dayName] = tempJadwal;
-    }
+    const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const dayName = days[currentViewDate.getDay()];
+    const tempJadwal = [];
+    const mapelInputs = document.querySelectorAll('#col-mapel .input-edit');
+    
+    mapelInputs.forEach((_, index) => {
+        const m = document.getElementById(`edit-mapel-${index}`).value;
+        // Ambil jam dan ubah titik dua balik jadi titik
+        let js = document.getElementById(`edit-jam-start-${index}`).value.replace(':', '.');
+        let je = document.getElementById(`edit-jam-end-${index}`).value.replace(':', '.');
+        const r = document.getElementById(`edit-ruang-${index}`).value;
+        
+        if(m.trim() !== "") {
+            tempJadwal.push([m, `${js} - ${je}`, r]);
+        }
+    });
+    jadwalData[currentWeekType][dayName] = tempJadwal;
+}
+
 
     function addRow() {
         const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
@@ -766,18 +771,39 @@
     }
 
     function checkHighlight() {
-        const now = new Date(); const ct = now.getHours() * 60 + now.getMinutes();
-        if (currentViewDate.toDateString() !== now.toDateString()) return;
-        const schedule = jadwalData[currentWeekType][["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"][now.getDay()]] || [];
-        schedule.forEach((item, index) => {
-            const tr = item[1].split('-'); const s = tr[0].split(':').map(Number); const e = tr[1].split(':').map(Number);
-            if (ct >= (s[0]*60+s[1]) && ct <= (e[0]*60+e[1])) {
+    const now = new Date(); 
+    const ct = now.getHours() * 60 + now.getMinutes();
+    if (currentViewDate.toDateString() !== now.toDateString()) return;
+
+    const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const schedule = jadwalData[currentWeekType][days[now.getDay()]] || [];
+
+    schedule.forEach((item, index) => {
+        // Kita buat lebih fleksibel, bisa baca titik (.) atau titik dua (:)
+        const timeStr = item[1].replace(/\./g, ':'); 
+        const tr = timeStr.split('-'); 
+        
+        if (tr.length === 2) {
+            const s = tr[0].split(':').map(Number); 
+            const e = tr[1].split(':').map(Number);
+            
+            const startTime = s[0] * 60 + s[1];
+            const endTime = e[0] * 60 + e[1];
+
+            if (ct >= startTime && ct <= endTime) {
                 document.getElementById(`mapel-${index}`)?.classList.add('highlight');
                 document.getElementById(`jam-${index}`)?.classList.add('highlight');
                 document.getElementById(`ruang-${index}`)?.classList.add('highlight');
+            } else {
+                // Jangan lupa hapus highlight kalau jamnya udah lewat
+                document.getElementById(`mapel-${index}`)?.classList.remove('highlight');
+                document.getElementById(`jam-${index}`)?.classList.remove('highlight');
+                document.getElementById(`ruang-${index}`)?.classList.remove('highlight');
             }
-        });
-    }
+        }
+    });
+}
+
 
     function previewTaskImages(input) {
         if (input.files) {
@@ -929,8 +955,8 @@ function logout() {
     localStorage.removeItem('role');
     
     // Balik ke halaman 
-    window.location.href = './login.html';
-    }
+    window.location.href = 'login.html';
+}
 
 </script>
       <div id="imageModal" class="modal-overlay">
@@ -942,31 +968,5 @@ function logout() {
     
     <div id="modal-counter"></div>
 </div>
-<script>
-(function() {
-    function fixFontSize() {
-        // Kita bikin elemen palsu buat ngetes ukuran font asli dari sistem HP
-        var testDiv = document.createElement('div');
-        testDiv.style.cssText = 'width:1rem;display:none !important';
-        document.body.appendChild(testDiv);
-        
-        // Kita itung berapa pixel 1rem di HP itu (normalnya 16px)
-        var actualSize = parseFloat(window.getComputedStyle(testDiv).getPropertyValue('width'));
-        
-        if (actualSize !== 16) {
-            // Kalau HP temen kamu font-nya disetel gede, kita hitung rasionya
-            var scale = 16 / actualSize;
-            // Kita paksa ukuran dasar HTML-nya ngecil biar tampilannya tetep pas
-            document.documentElement.style.fontSize = (scale * 100) + '%';
-        }
-        
-        document.body.removeChild(testDiv);
-    }
-    
-    // Jalankan pas aplikasi dibuka
-    fixFontSize();
-})();
-</script>
-
 </body>
     </html>
