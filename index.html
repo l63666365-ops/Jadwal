@@ -399,6 +399,22 @@
     animation: slideSwap 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 }
 
+    /* Style buat butiran warna-warni */
+.confetti-piece {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    z-index: 9999;
+    pointer-events: none;
+    animation: flyOut 0.8s ease-out forwards;
+}
+
+@keyframes flyOut {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--x), var(--y)) scale(0.5); opacity: 0; }
+}
+
 </style>
 </head>
 <body>
@@ -957,9 +973,79 @@ t.images.forEach((imgSrc, imgIndex) => {
     cancelImage(); 
     loadTasks();
 }
-
             
-    function toggleTask(i) { const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')); tasks[i].done = !tasks[i].done; localStorage.setItem('mySchoolTasks', JSON.stringify(tasks)); loadTasks(); }
+    // Fungsi buat bikin ledakan warna-warni
+function createConfetti(x, y) {
+    const colors = ['#ff0000', '#ffea00', '#ff00ff', '#00ff00', '#00eaff', '#ff9100', '#ffffff'];
+    for (let i = 0; i < 35; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti-piece';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 40 + Math.random() * 80;
+        const targetX = (Math.cos(angle) * velocity) + 'px';
+        const targetY = (Math.sin(angle) * velocity) + 'px';
+        
+        confetti.style.setProperty('--x', targetX);
+        confetti.style.setProperty('--y', targetY);
+        confetti.style.left = x + 'px';
+        confetti.style.top = y + 'px';
+        
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 800);
+    }
+}
+
+// Update fungsi toggleTask biar ada efek pas di-klik
+function toggleTask(i, event) {
+    const tasks = JSON.parse(localStorage.getItem('mySchoolTasks'));
+    tasks[i].done = !tasks[i].done;
+    localStorage.setItem('mySchoolTasks', JSON.stringify(tasks));
+    
+    // Kalau tugas ditandai selesai (centang), keluarin warna-warni
+    if (tasks[i].done && event) {
+        createConfetti(event.clientX, event.clientY);
+    }
+    
+    loadTasks();
+}
+
+// Update fungsi loadTasks (bagian baris innerHTML)
+function loadTasks() {
+    const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
+    const list = document.getElementById('taskList'); 
+    list.innerHTML = "";
+    
+    tasks.forEach((t, i) => {
+        const li = document.createElement('li'); 
+        li.className = `task-item ${t.done ? 'done' : ''}`;
+        li.style.flexDirection = "column";
+        li.style.alignItems = "flex-start";
+        li.style.position = "relative";
+
+        let imgsHtml = "";
+        if (t.images && t.images.length > 0) {
+            imgsHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;">`;
+            t.images.forEach((imgSrc, imgIndex) => { 
+                imgsHtml += `<img src="${imgSrc}" class="task-img" style="width:80px; height:80px; object-fit:cover;" onclick="openImage(${i}, ${imgIndex})">`; 
+            });
+            imgsHtml += `</div>`;
+        }
+
+        // PERHATIKAN: onclick ditambahkan parameter 'event'
+        li.innerHTML = `
+            <div style="display:flex; width:100%; align-items:center; gap:10px;">
+                <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onclick="toggleTask(${i}, event)">
+                <span class="task-text" onclick="toggleTask(${i}, event)">${t.text}</span>
+                <button class="btn-delete-task" onclick="deleteTask(${i})">×</button>
+            </div>
+            ${imgsHtml}
+        `;
+        list.appendChild(li);
+    });
+}
+
     function deleteTask(i) { const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')); tasks.splice(i, 1); localStorage.setItem('mySchoolTasks', JSON.stringify(tasks)); loadTasks(); }
     
     function changeBg(input) {
@@ -1042,4 +1128,4 @@ function logout() {
     <div id="modal-counter"></div>
 </div>
 </body>
-            </html>
+                </html>
