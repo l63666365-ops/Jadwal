@@ -472,6 +472,18 @@
     transform: translateY(3px);
 }
 
+/* Efek meluncur ke bawah */
+.slide-down {
+    transform: translateY(30px); /* Jarak turunnya agak jauhan dikit biar kelihatan 'jatuh' */
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); /* 0.5 detik udah paling maksimal biar pas */
+}
+
+/* Efek tugas lain yang kegeser naik (halus) */
+.task-item {
+    transition: all 0.4s ease-in-out; /* 0.4 detik buat geser posisi biar smooth */
+}
+
 </style>
 </head>
 <body>
@@ -997,40 +1009,45 @@
     }
 
 function loadTasks() {
-    const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
-    const list = document.getElementById('taskList'); 
-    list.innerHTML = "";
+    const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || []
+    const list = document.getElementById('taskList') 
+    list.innerHTML = ""
     
-    tasks.forEach((t, i) => {
-        const li = document.createElement('li'); 
-        li.className = `task-item ${t.done ? 'done' : ''}`;
-        li.style.flexDirection = "column";
-        li.style.alignItems = "flex-start";
-        li.style.position = "relative"; // Tambahkan ini agar posisi tombol X bisa diatur
+    // Kita buat list baru yang isinya data tugas + index aslinya
+    const mappedTasks = tasks.map((t, index) => ({ ...t, originalIndex: index }))
 
-        let imgsHtml = "";
+    // Pisahin: yang belum beres di atas, yang udah beres di bawah
+    const activeTasks = mappedTasks.filter(t => !t.done)
+    const completedTasks = mappedTasks.filter(t => t.done)
+    const sortedTasks = [...activeTasks, ...completedTasks]
+    
+    sortedTasks.forEach((t) => {
+        const i = t.originalIndex // Ini index asli biar nggak salah hapus
+        const li = document.createElement('li') 
+        li.className = `task-item ${t.done ? 'done' : ''}`
+        li.style.flexDirection = "column"
+        li.style.alignItems = "flex-start"
+        li.style.position = "relative"
+
+        let imgsHtml = ""
         if (t.images && t.images.length > 0) {
-            imgsHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;">`;
-            // Ganti bagian loop gambar di loadTasks jadi seperti ini
-t.images.forEach((imgSrc, imgIndex) => { 
-    imgsHtml += `<img src="${imgSrc}" class="task-img" style="width:80px; height:80px; object-fit:cover;" onclick="openImage(${i}, ${imgIndex})">`; 
-});
-
-
-            imgsHtml += `</div>`;
+            imgsHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;">`
+            t.images.forEach((imgSrc, imgIndex) => { 
+                imgsHtml += `<img src="${imgSrc}" class="task-img" style="width:80px; height:80px; object-fit:cover;" onclick="openImage(${i}, ${imgIndex})">` 
+            })
+            imgsHtml += `</div>`
         }
 
-        // Bagian innerHTML yang diperbarui dengan tombol X merah bulat
         li.innerHTML = `
             <div style="display:flex; width:100%; align-items:center; gap:10px;">
-                <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onclick="toggleTask(${i})">
-                <span class="task-text" onclick="toggleTask(${i})">${t.text}</span>
+                <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onclick="toggleTask(${i}, event)">
+                <span class="task-text" onclick="toggleTask(${i}, event)">${t.text}</span>
                 <button class="btn-delete-task" onclick="deleteTask(${i})">×</button>
             </div>
             ${imgsHtml}
-        `;
-        list.appendChild(li);
-    });
+        `
+        list.appendChild(li)
+    })
 }
 
 
@@ -1070,21 +1087,39 @@ function createConfetti(x, y) {
     }
 }
 
-// Update fungsi toggleTask biar ada efek pas di-klik
 function toggleTask(i, event) {
-    const tasks = JSON.parse(localStorage.getItem('mySchoolTasks'));
-    tasks[i].done = !tasks[i].done;
-    localStorage.setItem('mySchoolTasks', JSON.stringify(tasks));
+    let tasks = JSON.parse(localStorage.getItem('mySchoolTasks'));
+    const isNowDone = !tasks[i].done;
     
-    // Kalau tugas ditandai selesai (centang), keluarin warna-warni
-    if (tasks[i].done && event) {
+    // 1. Jalankan efek warna-warni dulu
+    if (isNowDone && event) {
         createConfetti(event.clientX, event.clientY);
     }
-    
-    loadTasks();
+
+    // 2. Kasih class animasi ke elemen yang diklik
+    const taskElements = document.querySelectorAll('.task-item');
+    if (isNowDone) {
+        taskElements[i].classList.add('slide-down');
+    }
+
+    // 3. Tunggu sebentar (0.6 detik) baru pindahin datanya secara permanen
+    setTimeout(() => {
+        tasks[i].done = isNowDone;
+        
+        // Logika sortir: yang belum beres di atas
+        const active = tasks.filter(t => !t.done);
+        const completed = tasks.filter(t => t.done);
+        const sortedTasks = [...active, ...completed];
+        
+        localStorage.setItem('mySchoolTasks', JSON.stringify(sortedTasks));
+        
+        // Render ulang daftar tugasnya
+        loadTasks();
+    }, 600); // Jeda biar mata sempet liat animasinya
 }
 
-// Update fungsi loadTasks (bagian baris innerHTML)
+
+// 2. GANTI FUNGSI LOADTASKS BIAR LEBIH SIMPLE
 function loadTasks() {
     const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
     const list = document.getElementById('taskList'); 
@@ -1106,7 +1141,6 @@ function loadTasks() {
             imgsHtml += `</div>`;
         }
 
-        // PERHATIKAN: onclick ditambahkan parameter 'event'
         li.innerHTML = `
             <div style="display:flex; width:100%; align-items:center; gap:10px;">
                 <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onclick="toggleTask(${i}, event)">
@@ -1118,6 +1152,7 @@ function loadTasks() {
         list.appendChild(li);
     });
 }
+
 
     function deleteTask(i) { const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')); tasks.splice(i, 1); localStorage.setItem('mySchoolTasks', JSON.stringify(tasks)); loadTasks(); }
     
@@ -1201,4 +1236,4 @@ function logout() {
     <div id="modal-counter"></div>
 </div>
 </body>
-    </html>
+        </html>
