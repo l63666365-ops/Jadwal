@@ -207,8 +207,29 @@
         .task-img { display: block; max-width: 100%; border-radius: 8px; margin-top: 8px; border: 1px solid var(--color-5); cursor: pointer; }
 
         .bg-control { text-align: center; margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
-        .btn-save { background: #28a745 !important; color: white !important; font-weight: 800 !important; border-color: #28a745 !important; }
-        
+        .btn-save {
+            background-color: var(--white);
+            color: #28a745;
+            border: 2px solid #28a745; 
+            border-radius: 12px; 
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            transition: all 0.1s ease;
+            box-shadow: 0 6px 0 #28a745; 
+            margin-bottom: 1px;
+            width: 100%; 
+            animation: fadeInUp 0.8s ease backwards; /* animasi munculnya */
+        }
+    
         #btn-edit-mode {
             background-color: var(--white);
             color: var(--color-2);
