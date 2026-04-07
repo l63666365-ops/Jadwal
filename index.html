@@ -227,7 +227,6 @@
             box-shadow: 0 6px 0 #28a745; 
             margin-bottom: 1px;
             width: 100%; 
-            animation: fadeInUp 0.8s ease backwards; /* animasi munculnya */
         }
     
         #btn-edit-mode {
@@ -435,6 +434,41 @@
     0% { transform: translate(0, 0) scale(1); opacity: 1; }
     100% { transform: translate(var(--x), var(--y)) scale(0.5); opacity: 0; }
 }
+    
+    .btn-save-small {
+    flex: 1;
+    max-width: 150px;
+    background: var(--white);
+    color: #28a745;
+    border: 2px solid #28a745;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #28a745;
+    transition: all 0.1s;
+}
+
+.btn-cancel-small {
+    flex: 1;
+    max-width: 150px;
+    background: var(--white);
+    color: #dc3545;
+    border: 2px solid #dc3545;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #dc3545;
+    transition: all 0.1s;
+}
+
+.btn-save-small:active, .btn-cancel-small:active {
+    box-shadow: 0 1px 0;
+    transform: translateY(3px);
+}
 
 </style>
 </head>
@@ -487,9 +521,20 @@
         <div class="grid-column" id="col-jam"></div>
         <div class="grid-column" id="col-ruang"></div>
     </div>
-    <div id="edit-controls" style="display:none; text-align:center; margin-top:10px;">
-        <button onclick="addRow()" style="background:var(--color-2); color:var(--color-5); border:none; padding:8px 20px; border-radius:10px; font-weight:bold; cursor:pointer;">+ TAMBAH MAPEL</button>
+            
+    <div id="edit-controls" style="display:none; flex-direction: column; align-items: center; gap: 10px; margin-top: 15px;">
+        
+        <button onclick="addRow()" style="background:var(--color-2); color:var(--color-5); border:none; padding:8px 20px; border-radius:10px; font-weight:bold; cursor:pointer; font-size: 13px; width: auto;">+ TAMBAH MAPEL</button>
+        
+        <div style="display: flex; gap: 8px; width: 100%; justify-content: center;">
+            <button id="btn-save-jadwal-top" class="btn-save-small" onclick="saveJadwal()">SIMPAN</button>
+            <button class="btn-cancel-small" onclick="toggleEditMode()">BATAL</button>
+        </div>
     </div>
+
+
+    <div class="task-section">
+        </div>
 
   <div class="task-section">
     <p style="font-size: 13px; font-weight: bold; margin-bottom: 5px; color: var(--color-2);">DAFTAR TUGAS:</p>
@@ -760,22 +805,27 @@
     function setWeek(week) { currentWeekType = week; document.getElementById('btn-m1').classList.toggle('active', week === 'm1'); document.getElementById('btn-m2').classList.toggle('active', week === 'm2'); renderSchedule(); }
     
     function toggleEditMode() { 
-        if (!isEditMode) {
-            backupJadwal = JSON.parse(JSON.stringify(jadwalData));
-            isEditMode = true;
-        } else {
-            jadwalData = JSON.parse(JSON.stringify(backupJadwal));
-            isEditMode = false;
-        }
-        
-        document.getElementById('btn-save-jadwal').style.display = isEditMode ? 'inline-block' : 'none'; 
-        document.getElementById('edit-controls').style.display = isEditMode ? 'block' : 'none';
-        const btn = document.getElementById('btn-edit-mode');
-        btn.innerText = isEditMode ? 'BATAL' : '📌 EDIT JADWAL HARIAN'; 
-        btn.classList.toggle('editing', isEditMode);
-        renderSchedule(); 
+    if (!isEditMode) {
+        backupJadwal = JSON.parse(JSON.stringify(jadwalData));
+        isEditMode = true;
+    } else {
+        jadwalData = JSON.parse(JSON.stringify(backupJadwal));
+        isEditMode = false;
     }
     
+    // Munculin atau sembunyiin panel tombol (+ TAMBAH, SIMPAN, BATAL)
+    const controls = document.getElementById('edit-controls');
+    controls.style.display = isEditMode ? 'flex' : 'none';
+    
+    // Biar teks tombol tetep sama, jangan diubah-ubah lagi
+    const btnUtama = document.getElementById('btn-edit-mode');
+    btnUtama.innerText = '📌 EDIT JADWAL HARIAN'; 
+    
+    renderSchedule(); 
+}
+
+
+
     function renderSchedule() {
     const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
     const dayName = days[currentViewDate.getDay()];
@@ -1149,4 +1199,4 @@ function logout() {
     <div id="modal-counter"></div>
 </div>
 </body>
-                </html>
+        </html>
