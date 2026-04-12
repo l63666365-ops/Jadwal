@@ -484,6 +484,48 @@
     transition: all 0.4s ease-in-out; /* 0.4 detik buat geser posisi biar smooth */
 }
 
+/* Style Tambahan buat Pilih Kelas Admin */
+.admin-selector {
+    display: none; /* Sembunyi dulu, nanti muncul via JS */
+    flex-direction: column;
+    gap: 20px;
+    animation: fadeInUp 0.8s ease;
+}
+
+.class-grid-admin {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.btn-pilih-kelas {
+    background: var(--color-5);
+    border: 1px solid var(--color-4);
+    border-radius: 12px;
+    padding: 15px;
+    font-weight: 700;
+    color: var(--color-2);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-pilih-kelas:hover {
+    background: var(--color-3);
+    color: white;
+}
+
+.btn-kembali-admin {
+    background: #ffc107;
+    color: #000;
+    border: none;
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    cursor: pointer;
+    width: 100%;
+}
+
 </style>
 </head>
 <body>
@@ -506,101 +548,109 @@
 </div>
 
 <div class="container">
-    <div class="glass-card header-strip">
-        <div id="clock" onclick="showMotivation()">00.00.00</div>
-        <div id="quote-popup"></div>
-        <div id="full-date">Memuat...</div>
-        <div class="status-container" id="status-live">
-            <div class="status-now" id="stat-now">Mencari pelajaran...</div>
-            <div class="status-next" id="stat-next"></div>
+    <div id="adminSelector" style="display: none; flex-direction: column; gap: 15px;">
+        <div class="glass-card header-strip">
+            <h1 style="font-size: 28px; font-weight: 800; color: var(--color-2); margin-bottom: 5px;">PILIH KELAS</h1>
+            <p style="font-size: 13px; color: var(--color-3); font-weight: 600;">Panel Monitoring Admin</p>
         </div>
-    </div>
-
-    <div class="nav-day">
-        <button class="btn-nav" onclick="changeDay(-1)"> << </button>
-        <div class="glass-card current-day-box" id="display-day">Hari Ini</div>
-        <button class="btn-nav" onclick="changeDay(1)"> >> </button>
-    </div>
-
-    <div class="week-toggle">
-        <button id="btn-m1" class="btn-week active" onclick="setWeek('m1')">Minggu 1</button>
-        <button id="btn-m2" class="btn-week" onclick="setWeek('m2')">Minggu 2</button>
-    </div>
-
-    <div class="schedule-grid" id="main-grid">
-        <div class="grid-header">Mapel</div>
-        <div class="grid-header">Jam</div>
-        <div class="grid-header">Ruang</div>
-        <div class="grid-column" id="col-mapel"></div>
-        <div class="grid-column" id="col-jam"></div>
-        <div class="grid-column" id="col-ruang"></div>
-    </div>
-            
-    <div id="edit-controls" style="display:none; flex-direction: column; align-items: center; gap: 10px; margin-top: 35px;">
         
-        <button onclick="addRow()" style="background:var(--color-2); color:var(--color-5); border:none; padding:10px 22px; border-radius:10px; font-weight:bold; cursor:pointer; font-size: 13px; width: auto;">+ TAMBAH MAPEL</button>
-        
-        <div style="display: flex; gap: 20px; width: 100%; justify-content: center;">
-            <button id="btn-save-jadwal-top" class="btn-save-small" onclick="saveJadwal()">SIMPAN</button>
-            <button class="btn-cancel-small" onclick="toggleEditMode()">BATAL</button>
+        <div class="schedule-grid" style="grid-template-columns: 1fr 1fr; gap: 12px;">
+            <button class="item-box" onclick="adminLihatJadwal('TKP 1')" style="cursor:pointer; background:var(--white)">TKP 1</button>
+            <button class="item-box" onclick="adminLihatJadwal('TKP 2')" style="cursor:pointer; background:var(--white)">TKP 2</button>
+            <button class="item-box" onclick="adminLihatJadwal('DPIB 1')" style="cursor:pointer; background:var(--white)">DPIB 1</button>
+            <button class="item-box" onclick="adminLihatJadwal('DPIB 2')" style="cursor:pointer; background:var(--white)">DPIB 2</button>
+            <button class="item-box" onclick="adminLihatJadwal('TP 1')" style="cursor:pointer; background:var(--white)">TP 1</button>
+            <button class="item-box" onclick="adminLihatJadwal('TP 2')" style="cursor:pointer; background:var(--white)">TP 2</button>
+            <button class="item-box" onclick="adminLihatJadwal('TP 3')" style="cursor:pointer; background:var(--white)">TP 3</button>
+            <button class="item-box" onclick="adminLihatJadwal('TP 4')" style="cursor:pointer; background:var(--white)">TP 4</button>
+            <button class="item-box" onclick="adminLihatJadwal('TKR 1')" style="cursor:pointer; background:var(--white)">TKR 1</button>
+            <button class="item-box" onclick="adminLihatJadwal('TKR 2')" style="cursor:pointer; background:var(--white)">TKR 2</button>
+            <button class="item-box" onclick="adminLihatJadwal('TKR 3')" style="cursor:pointer; background:var(--white)">TKR 3</button>
+            <button class="item-box" onclick="adminLihatJadwal('TKR 4')" style="cursor:pointer; background:var(--white)">TKR 4</button>
+            <button class="item-box" onclick="adminLihatJadwal('TITL 1')" style="cursor:pointer; background:var(--white)">TITL 1</button>
+            <button class="item-box" onclick="adminLihatJadwal('TITL 2')" style="cursor:pointer; background:var(--white)">TITL 2</button>
+            <button class="item-box" onclick="adminLihatJadwal('TITL 3')" style="cursor:pointer; background:var(--white)">TITL 3</button>
+            <button class="item-box" onclick="adminLihatJadwal('TITL 4')" style="cursor:pointer; background:var(--white)">TITL 4</button>
+            <button class="item-box" onclick="adminLihatJadwal('TKJ 1')" style="cursor:pointer; background:var(--white)">TKJ 1</button>
+            <button class="item-box" onclick="adminLihatJadwal('TKJ 2')" style="cursor:pointer; background:var(--white)">TKJ 2</button>
         </div>
+
+        <button onclick="logout()" class="btn-save" style="background: var(--white); color: #dc3545; border: 2px solid #dc3545; box-shadow: 0 6px 0 #dc3545;">
+            LOGOUT ADMIN
+        </button>
     </div>
 
-
-    <div class="task-section">
-        </div>
-
-  <div class="task-section">
-    <p style="font-size: 13px; font-weight: bold; margin-bottom: 5px; color: var(--color-2);">DAFTAR TUGAS:</p>
-    <div class="task-input-container">
-    <textarea id="taskInput" placeholder="Ketik tugas baru..."></textarea>
+     <div id="mainScheduleContent" style="display: flex; flex-direction: column; gap: 20px; width: 100%; align-items: center;">
     
-    <input type="file" id="taskImageInput" accept="image/*" style="display: none;" multiple onchange="previewTaskImages(this)">
+     <div id="wrapperBackBtn" style="width: 100%; display: flex; justify-content: flex-start; padding: 0 5px;">
+            <button id="btnBackToAdmin" onclick="backToAdminMenu()" 
+                style="display:none; background: #4a6fa5; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 #2c3e50; font-size: 12px;">
+                ← KEMBALI KE PILIH KELAS
+            </button>
+        </div>
 
-    <button type="button" class="btn-add" onclick="bukaKamera(event)" style="font-size: 19px;">📷</button>
-    <button type="button" class="btn-add" onclick="addTask()">+</button>
-</div>
+    <div class="glass-card header-strip" style="width: 100%; margin-top: 0;">
+            <div id="clock" onclick="showMotivation()">00.00.00</div>
+            <div id="quote-popup"></div>
+            <div id="full-date">Memuat...</div>
+            <div class="status-container" id="status-live">
+                <div class="status-now" id="stat-now">Mencari pelajaran...</div>
+                <div class="status-next" id="stat-next"></div>
+            </div>
+        </div>
+    
+   <div class="nav-day" style="width: 100%;">
+            <button class="btn-nav" onclick="changeDay(-1)"> << </button>
+            <div class="glass-card current-day-box" id="display-day">Hari Ini</div>
+            <button class="btn-nav" onclick="changeDay(1)"> >> </button>
+        </div>
 
-    <div id="imagePreviewContainer" style="display:none; margin-top:10px; text-align:left; display: flex; flex-wrap: wrap; gap: 5px;"></div>
-    <ul class="task-list" id="taskList"></ul>
-</div>
+     <div class="week-toggle">
+            <button id="btn-m1" class="btn-week active" onclick="setWeek('m1')">Minggu 1</button>
+            <button id="btn-m2" class="btn-week" onclick="setWeek('m2')">Minggu 2</button>
+        </div>
 
+ <div class="schedule-grid" id="main-grid" style="width: 100%;">
+            <div class="grid-header">Mapel</div>
+            <div class="grid-header">Jam</div>
+            <div class="grid-header">Ruang</div>
+            <div class="grid-column" id="col-mapel"></div>
+            <div class="grid-column" id="col-jam"></div>
+            <div class="grid-column" id="col-ruang"></div>
+        </div>
+            
+ <div id="edit-controls" style="display:none; flex-direction: column; align-items: center; gap: 10px; margin-top: 35px; width: 100%;">
+            <button onclick="addRow()" style="background:var(--color-2); color:var(--color-5); border:none; padding:10px 22px; border-radius:10px; font-weight:bold; cursor:pointer; font-size: 13px; width: auto;">+ TAMBAH MAPEL</button>
+            <div style="display: flex; gap: 20px; width: 100%; justify-content: center;">
+                <button id="btn-save-jadwal-top" class="btn-save-small" onclick="saveJadwal()">SIMPAN</button>
+                <button class="btn-cancel-small" onclick="toggleEditMode()">BATAL</button>
+            </div>
+        </div>
 
-    <div class="bg-control">
-        <button id="btn-edit-mode" onclick="toggleEditMode()">📌 EDIT JADWAL HARIAN</button>
-        <button id="btn-save-jadwal" class="btn-nav btn-save" style="display:none;" onclick="saveJadwal()">SIMPAN PERUBAHAN</button>
-        <input type="file" id="bgInput" accept="image/*" style="display: none;" onchange="changeBg(this)">
-    </div>
+  <div class="task-section" style="width: 100%;">
+            <p style="font-size: 13px; font-weight: bold; margin-bottom: 5px; color: var(--color-2);">DAFTAR TUGAS:</p>
+            <div class="task-input-container">
+                <textarea id="taskInput" placeholder="Ketik tugas baru..."></textarea>
+                <input type="file" id="taskImageInput" accept="image/*" style="display: none;" multiple onchange="previewTaskImages(this)">
+                <button type="button" class="btn-add" onclick="bukaKamera(event)" style="font-size: 19px;">📷</button>
+                <button type="button" class="btn-add" onclick="addTask()">+</button>
+            </div>
+            <div id="imagePreviewContainer" style="display:none; margin-top:10px; text-align:left; display: flex; flex-wrap: wrap; gap: 5px;"></div>
+            <ul class="task-list" id="taskList"></ul>
+        </div>
 
-<div style="margin-top: 5px; padding: 0 10px;">
-    <button onclick="logout()" 
-        style="
-            background-color: var(--white);
-            color: var(--color-2);
-            border: 2px solid var(--color-2);
-            border-radius: 12px; 
-            padding: 15px 30px;
-            font-size: 16.7px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            position: relative;
-            transition: all 0.1s ease;
-            box-shadow: 0 6px 0 var(--color-2); 
-            margin-bottom: 1px;
-            width: 100%; 
-            animation: fadeInUp 0.8s ease backwards;
-        ">
-        <i class="fas fa-sign-out-alt"></i> Keluar
-    </button>
-</div>
+  <div class="bg-control" style="width: 100%;">
+            <button id="btn-edit-mode" onclick="toggleEditMode()">📌 EDIT JADWAL HARIAN</button>
+            <button id="btn-save-jadwal" class="btn-nav btn-save" style="display:none;" onclick="saveJadwal()">SIMPAN PERUBAHAN</button>
+        </div>
 
-
+  <div style="margin-top: 5px; padding: 0 10px; width: 100%;">
+            <button onclick="logout()" style="background-color: var(--white); color: var(--color-2); border: 2px solid var(--color-2); border-radius: 12px; padding: 15px 30px; font-size: 16.7px; font-weight: 800; text-transform: uppercase; cursor: pointer; width: 100%; box-shadow: 0 6px 0 var(--color-2);">
+                Keluar
+            </button>
+        </div>
+    </div> 
+       
 <script>
     if (localStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'login.html'; // Tendang balik ke  kalau belum 
@@ -680,19 +730,20 @@
     let selectedImagesData = [];
 
     async function fetchJadwalDariSheet() {
-    // Pakai link sakti kamu yang baru ya 
     const urlGAS = "https://script.google.com/macros/s/AKfycbxIzFrxaG6eBW7TTSePHLpYMLTt7_BPr6RK996JuG382lT2HsWrOAMHw7PyWVAOPIQbvA/exec";
     
     try {
         const response = await fetch(urlGAS);
         const data = await response.json(); 
+        
+        // RESET data jadwal setiap kali narik data baru agar tidak numpuk kelas lain
         let newJadwal = { m1: {}, m2: {} };
         let mK = "", mM = "", mH = "";
         
+        // Ambil kelas yang sedang aktif dipilih (entah dari login atau klik admin)
         const userKelasLogin = (localStorage.getItem("userKelas") || "").replace(/\s/g, "").toUpperCase();
 
         data.forEach(row => {
-            // Karena GAS pake nama kolom sebagai KEY, kita ambil nilainya 
             let cols = Object.values(row); 
             if (cols[0] && cols[0] !== "") mK = cols[0];
             if (cols[1] && cols[1] !== "") mM = cols[1];
@@ -700,7 +751,8 @@
 
             let kelasSheet = mK.toString().replace(/\s/g, "").toUpperCase();
 
-            if (kelasSheet === userKelasLogin || localStorage.getItem("role") === "admin") {
+            // Saring hanya untuk kelas yang sedang dipilih sayang
+            if (kelasSheet === userKelasLogin) {
                 let mapel = cols[3], jam = cols[4], ruang = cols[5];
                 if (mapel && jam) {
                     let week = (mM.toString() == "2") ? "m2" : "m1";
@@ -710,9 +762,13 @@
             }
         });
         
+        // Simpan data yang sudah BERSIH (hanya 1 kelas) ke memori
         jadwalData = newJadwal;
         localStorage.setItem('savedJadwal', JSON.stringify(jadwalData));
+        
+        // Update tampilan
         renderSchedule();
+        updateStatus();
     } catch (err) {
         console.log("Error:", err);
     }
@@ -1054,12 +1110,20 @@ function loadTasks() {
     function addTask() {
     const input = document.getElementById('taskInput'); 
     if (input.value.trim() === "" && selectedImagesData.length === 0) return;
+    
     const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
-    tasks.push({ text: input.value, images: [...selectedImagesData], done: false }); 
+    
+    // pakai unshift biar tugas baru masuk ke urutan paling atas (index 0)
+    tasks.unshift({ 
+        text: input.value, 
+        images: [...selectedImagesData], 
+        done: false 
+    }); 
+    
     localStorage.setItem('mySchoolTasks', JSON.stringify(tasks));
     
     input.value = ""; 
-    input.style.height = "45px"; // Reset tinggi kotak setelah nambah tugas
+    input.style.height = "45px"; 
     cancelImage(); 
     loadTasks();
 }
@@ -1091,31 +1155,27 @@ function toggleTask(i, event) {
     let tasks = JSON.parse(localStorage.getItem('mySchoolTasks'));
     const isNowDone = !tasks[i].done;
     
-    // 1. Jalankan efek warna-warni dulu
     if (isNowDone && event) {
         createConfetti(event.clientX, event.clientY);
     }
 
-    // 2. Kasih class animasi ke elemen yang diklik
     const taskElements = document.querySelectorAll('.task-item');
     if (isNowDone) {
         taskElements[i].classList.add('slide-down');
     }
 
-    // 3. Tunggu sebentar (0.6 detik) baru pindahin datanya secara permanen
     setTimeout(() => {
         tasks[i].done = isNowDone;
         
-        // Logika sortir: yang belum beres di atas
+        // sortir: yang belum selesai (done: false) di atas, yang sudah (done: true) di bawah
+        // urutan sesama tugas aktif tetap terjaga karena filter mempertahankan urutan asli
         const active = tasks.filter(t => !t.done);
         const completed = tasks.filter(t => t.done);
         const sortedTasks = [...active, ...completed];
         
         localStorage.setItem('mySchoolTasks', JSON.stringify(sortedTasks));
-        
-        // Render ulang daftar tugasnya
         loadTasks();
-    }, 600); // Jeda biar mata sempet liat animasinya
+    }, 600);
 }
 
 
@@ -1165,17 +1225,79 @@ function loadTasks() {
     }
 
         window.onload = function() {
-        const savedBg = localStorage.getItem('savedBg');
-        if (savedBg) document.body.style.backgroundImage = `linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), url('${savedBg}')`;
-        updateTime(); 
-        setAutoWeek(); 
-        renderSchedule(); 
-        loadTasks();
-        fetchJadwalDariSheet(); // <--- Tambahin ini !
-    };
+    const role = localStorage.getItem('role');
+    const adminSelector = document.getElementById('adminSelector');
+    const mainContent = document.getElementById('mainScheduleContent');
+    const btnEdit = document.getElementById('btn-edit-mode');
+    const btnBack = document.getElementById('btnBackToAdmin');
+
+    if (role === 'admin') {
+         const pomoIcon = document.querySelector('.pomo-icon');
+        if (pomoIcon) pomoIcon.style.display = 'none';
+        // Jika admin, sembunyikan jadwal dulu, tampilkan menu pilih kelas
+        adminSelector.style.display = 'flex';
+        mainContent.style.display = 'none';
+        
+        // Sesuai permintaan: tombol edit dihapus buat admin
+        if(btnEdit) btnEdit.style.display = 'none';
+        
+        // Munculkan tombol kembali di halaman jadwal
+        btnBack.style.display = 'block';
+    }
+
+    // Sisanya tetep jalanin fungsi load data lainnya
+    const savedBg = localStorage.getItem('savedBg');
+    if (savedBg) document.body.style.backgroundImage = `linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), url('${savedBg}')`;
+    updateTime(); 
+    setAutoWeek(); 
+    renderSchedule(); 
+    loadTasks();
+    fetchJadwalDariSheet();
+};
 
         let currentImgList = [];
 let currentImgIndex = 0;
+        
+        
+        function adminLihatJadwal(kelas) {
+    localStorage.setItem('userKelas', kelas); 
+    
+    const mainContent = document.getElementById('mainScheduleContent');
+    const adminSelector = document.getElementById('adminSelector');
+
+    // 1. Sembunyikan menu admin
+    adminSelector.style.display = 'none';
+    
+    // 2. Munculkan konten jadwal
+    mainContent.style.display = 'flex';
+
+    // 3. Ambil data dulu baru pancing animasinya
+    fetchJadwalDariSheet().then(() => {
+        // Kita kasih jeda super pendek biar HTML-nya selesai keganti sama data baru
+        setTimeout(() => {
+            const targets = [
+                '.glass-card', '.nav-day', '.week-toggle', 
+                '.schedule-grid', '.task-section', '#btn-edit-mode'
+            ];
+            
+            targets.forEach((selector) => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(el => {
+                    el.style.animation = 'none';
+                    el.offsetHeight; // pancing reflow
+                    el.style.animation = ''; // pasang lagi animasi dari CSS
+                });
+            });
+        }, 50); 
+    });
+}
+
+
+        
+        function backToAdminMenu() {
+    document.getElementById('adminSelector').style.display = 'flex';
+    document.getElementById('mainScheduleContent').style.display = 'none';
+}
         
 function openImage(taskIndex, imgIndex) {
     const tasks = JSON.parse(localStorage.getItem('mySchoolTasks'));
@@ -1236,4 +1358,4 @@ function logout() {
     <div id="modal-counter"></div>
 </div>
 </body>
-        </html>
+                </html>
