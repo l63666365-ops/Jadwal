@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0.91, maximum-scale=0.91, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=0.92, maximum-scale=0.92, user-scalable=no">
     <title>Jadwal Sekolah Pro - Ocean Indigo Theme</title>
     <style>
         
@@ -101,7 +101,7 @@
             background: var(--white);
         }
         
-        #clock { font-size: 51px; font-weight: 800; letter-spacing: -2px; color: var(--color-2); cursor: pointer; transition: transform 0.2s; position: relative; z-index: 5; }
+        #clock { font-size: 51px; font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: -2px; color: var(--color-2); cursor: pointer; transition: transform 0.2s; position: relative; z-index: 5; }
         #clock:active { transform: scale(0.95); }
         #full-date { font-size: 16px; font-weight: 600; color: var(--color-3); margin-bottom: 10px; }
         
@@ -144,6 +144,7 @@
             color: var(--color-1);
             transition: all 0.3s ease; flex-direction: column; gap: 2px; position: relative; 
             box-shadow: 0 2px 4px rgba(5, 38, 89, 0.02);
+            white-space: nowrap;
         }
         .item-box:hover { background: var(--color-5); border-color: var(--color-3); }
         
@@ -786,18 +787,32 @@
         document.getElementById('btn-m1').classList.toggle('active', currentWeekType === 'm1');
         document.getElementById('btn-m2').classList.toggle('active', currentWeekType === 'm2');
     }
+       
     function updateTime() {
-        const now = new Date();
-        document.getElementById('clock').innerText = now.toLocaleTimeString('id-ID', { hour12: false }).replace(/:/g, '.');
-        document.getElementById('full-date').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-        if (now.toDateString() !== lastDateStr) { lastDateStr = now.toDateString(); currentViewDate = new Date(); setAutoWeek(); renderSchedule(); }
-        updateStatus(); if(!isEditMode) checkHighlight();
+    const now = new Date();
+    // Ambil jam, menit, detik secara terpisah
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    
+    // Gabungin dengan spasi sebelum dan sesudah titik dua
+    document.getElementById('clock').innerText = `${h} : ${m} : ${s}`;
+    
+    document.getElementById('full-date').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    if (now.toDateString() !== lastDateStr) { 
+        lastDateStr = now.toDateString(); 
+        currentViewDate = new Date(); 
+        setAutoWeek(); 
+        renderSchedule(); 
     }
-    setInterval(updateTime, 1000);
+    updateStatus(); 
+    if(!isEditMode) checkHighlight();
+}
 
-    function updateStatus() {
+       function updateStatus() {
     const now = new Date(); 
-    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const currentTimeMs = now.getTime(); 
+    const currentTimeMin = now.getHours() * 60 + now.getMinutes();
     const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
     const todayName = days[now.getDay()];
     
@@ -815,41 +830,53 @@
     let ongoing = null; 
     let next = null;
 
+    const getCountdown = (targetHour, targetMin) => {
+        let targetDate = new Date();
+        targetDate.setHours(targetHour, targetMin, 0, 0);
+        let diffMs = targetDate.getTime() - currentTimeMs;
+        let totalSecs = Math.max(0, Math.floor(diffMs / 1000));
+        let h = Math.floor(totalSecs / 3600);
+        let m = Math.floor((totalSecs % 3600) / 60);
+        let s = totalSecs % 60;
+        
+        let hasil = [];
+        if (h > 0) hasil.push(h + " jam");
+        if (m > 0) hasil.push(m + " menit");
+        if (s > 0 || hasil.length === 0) hasil.push(s + " detik");
+        return hasil.join(" ");
+    };
+
     for (let i = 0; i < listMapel.length; i++) {
-        // TRIK AJAIB: Kita ganti titik jadi titik dua secara otomatis di sini 
         let timeStr = listMapel[i][1].replace(/\./g, ':').replace(/\s/g, ''); 
         const timeRange = timeStr.split('-');
-        
         if (!timeRange[1]) continue;
 
         const start = timeRange[0].split(':').map(Number);
         const end = timeRange[1].split(':').map(Number);
-        
-        const startTime = start[0] * 60 + start[1];
-        const endTime = end[0] * 60 + end[1];
+        const startTimeInMin = start[0] * 60 + start[1];
+        const endTimeInMin = end[0] * 60 + end[1];
 
-        if (currentTime >= startTime && currentTime < endTime) {
-            ongoing = { name: listMapel[i][0], end: endTime };
+        if (currentTimeMin >= startTimeInMin && currentTimeMin < endTimeInMin) {
+            ongoing = { name: listMapel[i][0], countdown: getCountdown(end[0], end[1]) };
             next = listMapel[i+1] ? { name: listMapel[i+1][0] } : null;
             break;
-        } else if (currentTime < startTime) {
-            next = { name: listMapel[i][0], start: startTime }; 
+        } else if (currentTimeMin < startTimeInMin) {
+            next = { name: listMapel[i][0], countdown: getCountdown(start[0], start[1]) }; 
             break;
         }
     }
 
     if (ongoing) {
-        statNow.innerText = `Sekarang: ${ongoing.name} (berakhir ${ongoing.end - currentTime} menit lagi)`;
+        statNow.innerHTML = `Sekarang: <b>${ongoing.name}</b> (berakhir ${ongoing.countdown})`;
         statNext.innerText = next ? `Selanjutnya: ${next.name}` : "Selanjutnya: Jam Pulang 🎉";
     } else if (next) {
-        statNow.innerText = `Istirahat`;
-        statNext.innerText = `Selanjutnya: ${next.name} (mulai ${next.start - currentTime} menit lagi)`;
+        statNow.innerHTML = `<b>Istirahat</b>`;
+        statNext.innerHTML = `Selanjutnya: <b>${next.name}</b> (mulai ${next.countdown} lagi)`;
     } else {
         statNow.innerText = "Semua mapel hari ini selesai 🏆"; 
         statNext.innerText = "Waktunya istirahat";
     }
 }
-
 
     function changeDay(offset) {
     const grid = document.getElementById('main-grid');
@@ -932,11 +959,17 @@
             </div>`;
             colRuang.innerHTML += `<div class="item-box"><input class="input-edit" id="edit-ruang-${index}" value="${item[2]}"></div>`;
             
-        } else {
-            colMapel.innerHTML += `<div class="item-box" id="mapel-${index}">${item[0]}</div>`;
-            colJam.innerHTML += `<div class="item-box" id="jam-${index}">${item[1]}</div>`;
-            colRuang.innerHTML += `<div class="item-box" id="ruang-${index}">${item[2]}</div>`;
-        }
+} else {
+    colMapel.innerHTML += `<div class="item-box" id="mapel-${index}">${item[0]}</div>`;
+    
+    // Kita pakai spasi tipis (&thinsp;) biar jaraknya pas di mata
+    let jamCantik = item[1].replace(/\./g, '&thinsp;:&thinsp;').replace('-', ' — ');
+    
+    colJam.innerHTML += `<div class="item-box" id="jam-${index}" style="font-size: 14px; letter-spacing: -0.2px;">${jamCantik}</div>`;
+    
+    colRuang.innerHTML += `<div class="item-box" id="ruang-${index}">${item[2]}</div>`;
+}
+
     });
     if(!isEditMode) checkHighlight();
 }
@@ -1347,6 +1380,9 @@ function logout() {
     window.location.href = 'login.html';
 }
 
+setInterval(updateTime, 1000); 
+updateTime(); 
+
 </script>
       <div id="imageModal" class="modal-overlay">
     <div onclick="closeImage()" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:3050;"></div>
@@ -1358,4 +1394,4 @@ function logout() {
     <div id="modal-counter"></div>
 </div>
 </body>
-                </html>
+    </html>
