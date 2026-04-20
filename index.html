@@ -809,6 +809,9 @@
     if(!isEditMode) checkHighlight();
 }
 
+setInterval(updateTime, 1000); 
+updateTime(); 
+       
        function updateStatus() {
     const now = new Date(); 
     const currentTimeMs = now.getTime(); 
@@ -1379,9 +1382,6 @@ function logout() {
     // Balik ke halaman 
     window.location.href = 'login.html';
 }
-
-setInterval(updateTime, 1000); 
-updateTime(); 
 
 </script>
       <div id="imageModal" class="modal-overlay">
