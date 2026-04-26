@@ -1146,11 +1146,11 @@ async function loadTasks() {
     const role = localStorage.getItem('role');
     const userKelas = (localStorage.getItem("userKelas") || "UMUM").trim();
 
-    // Ambil status centang pribadi dari local storage
     let personalChecks = JSON.parse(localStorage.getItem('personalTaskChecks')) || {};
 
     let cloudTasks = {};
     try {
+        // Ambil data terbaru dari server Firebase
         const res = await fetch(`${firebaseTugasURL}/${userKelas}.json`);
         cloudTasks = await res.json() || {};
     } catch (e) { console.log("Gagal ambil data cloud"); }
@@ -1158,9 +1158,9 @@ async function loadTasks() {
     let localTasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
     const combinedTasks = [];
     
+    // PROSES TUGAS DARI SEKRETARIS (CLOUD)
     Object.keys(cloudTasks).forEach(id => {
-        // Logika Inti: Tugas dianggap selesai kalau di Cloud 'done' 
-        // ATAU kalau ID cloud ini ada di daftar centang pribadi lokal
+        // Cek apakah siswa sudah centang sendiri atau sekretaris yang centang
         const isDone = cloudTasks[id].done || personalChecks[id] === true;
         
         combinedTasks.push({ 
@@ -1168,19 +1168,24 @@ async function loadTasks() {
             ...cloudTasks[id], 
             done: isDone, 
             isCloud: true,
-            originalCloudDone: cloudTasks[id].done // Simpan status asli cloud
+            // PENTING: Ambil array images dari cloud supaya foto muncul di semua siswa
+            images: cloudTasks[id].images || [], 
+            originalCloudDone: cloudTasks[id].done 
         });
     });
     
+    // PROSES TUGAS PRIBADI (LOCAL)
     localTasks.forEach((t, i) => {
         combinedTasks.push({ id: i, ...t, isCloud: false });
     });
 
+    // Urutkan biar yang belum dikerjakan ada di atas
     combinedTasks.sort((a, b) => {
         if (a.done !== b.done) return a.done ? 1 : -1;
         return b.timestamp - a.timestamp;
     });
 
+    // Cek perubahan biar nggak render ulang terus (hemat baterai)
     const currentDataString = JSON.stringify(combinedTasks);
     if (window.lastTasksData === currentDataString) return; 
     window.lastTasksData = currentDataString;
@@ -1192,8 +1197,9 @@ async function loadTasks() {
     });
 }
 
+
        
-       function renderTaskItem(id, t, isCloud, canDelete) {
+    function renderTaskItem(id, t, isCloud, canDelete) {
     const list = document.getElementById('taskList');
     const li = document.createElement('li');
     li.className = `task-item ${t.done ? 'done' : ''}`;
@@ -1201,11 +1207,21 @@ async function loadTasks() {
     li.style.alignItems = "flex-start";
     li.style.position = "relative";
     
-    // Tambahkan atribut data-id buat keperluan animasi
     li.setAttribute('data-id', id);
 
     const toggleFunc = isCloud ? `toggleTaskCloud('${id}', ${t.done}, event)` : `toggleTaskLocal(${id}, event)`;
     const deleteFunc = isCloud ? `deleteTaskCloud('${id}', event)` : `deleteTaskLocal(${id}, event)`;
+
+    let imagesHtml = "";
+    // Bagian ini sekarang akan membaca t.images baik dari Cloud maupun Local
+    if (t.images && t.images.length > 0) {
+        imagesHtml = `<div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">`;
+        t.images.forEach((img, imgIdx) => {
+            // Kita panggil fungsi openImageFromTask supaya semua user bisa klik gambarnya
+            imagesHtml += `<img src="${img}" class="task-img" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;" onclick="openImageFromTask(${isCloud ? -1 : id}, ${imgIdx}, '${isCloud ? id : ''}')">`;
+        });
+        imagesHtml += `</div>`;
+    }
 
     li.innerHTML = `
         <div style="display:flex; width:100%; align-items:center; gap:10px;">
@@ -1213,8 +1229,30 @@ async function loadTasks() {
             <span class="task-text" onclick="${toggleFunc}">${t.text}</span>
             ${canDelete ? `<button class="btn-delete-task" onclick="${deleteFunc}">×</button>` : ''}
         </div>
+        ${imagesHtml}
     `;
     list.appendChild(li);
+}
+
+
+async function openImageFromTask(localId, imgIdx, cloudId) {
+    if (localId !== -1) {
+        // Kalau tugas lokal
+        const tasks = JSON.parse(localStorage.getItem('mySchoolTasks'));
+        currentImgList = tasks[localId].images;
+    } else {
+        // Kalau tugas cloud (sekretaris)
+        const userKelas = (localStorage.getItem("userKelas") || "UMUM").trim();
+        const res = await fetch(`${firebaseTugasURL}/${userKelas}/${cloudId}.json`);
+        const taskData = await res.json();
+        currentImgList = taskData.images;
+    }
+    
+    currentImgIndex = imgIdx;
+    updateModalContent();
+    const modal = document.getElementById('imageModal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
 }
 
    async function addTask() {
