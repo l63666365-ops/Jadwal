@@ -1146,39 +1146,41 @@ async function loadTasks() {
     const role = localStorage.getItem('role');
     const userKelas = (localStorage.getItem("userKelas") || "UMUM").trim();
 
-    // 1. Ambil data Cloud (Firebase)
+    // Ambil status centang pribadi dari local storage
+    let personalChecks = JSON.parse(localStorage.getItem('personalTaskChecks')) || {};
+
     let cloudTasks = {};
     try {
         const res = await fetch(`${firebaseTugasURL}/${userKelas}.json`);
         cloudTasks = await res.json() || {};
     } catch (e) { console.log("Gagal ambil data cloud"); }
 
-    // 2. Ambil data Lokal
     let localTasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
-
-    // Gabung dan Sortir: Belum selesai di atas, Urut berdasarkan waktu terbaru
     const combinedTasks = [];
     
-    // Proses Cloud Tasks
     Object.keys(cloudTasks).forEach(id => {
-        combinedTasks.push({ id, ...cloudTasks[id], isCloud: true });
+        // Logika Inti: Tugas dianggap selesai kalau di Cloud 'done' 
+        // ATAU kalau ID cloud ini ada di daftar centang pribadi lokal
+        const isDone = cloudTasks[id].done || personalChecks[id] === true;
+        
+        combinedTasks.push({ 
+            id, 
+            ...cloudTasks[id], 
+            done: isDone, 
+            isCloud: true,
+            originalCloudDone: cloudTasks[id].done // Simpan status asli cloud
+        });
     });
     
-    // Proses Local Tasks
     localTasks.forEach((t, i) => {
         combinedTasks.push({ id: i, ...t, isCloud: false });
     });
 
-    // Algoritma Sortir: 
-    // 1. Status 'done' (false dulu baru true)
-    // 2. Timestamp (terbaru di atas)
     combinedTasks.sort((a, b) => {
         if (a.done !== b.done) return a.done ? 1 : -1;
         return b.timestamp - a.timestamp;
     });
 
-    // 3. Render secara efisien (cegah kedip)
-    // Kalau data sama dengan yang sebelumnya, jangan render ulang total
     const currentDataString = JSON.stringify(combinedTasks);
     if (window.lastTasksData === currentDataString) return; 
     window.lastTasksData = currentDataString;
@@ -1189,6 +1191,7 @@ async function loadTasks() {
         renderTaskItem(t.id, t, t.isCloud, canDelete);
     });
 }
+
        
        function renderTaskItem(id, t, isCloud, canDelete) {
     const list = document.getElementById('taskList');
@@ -1267,21 +1270,44 @@ function createConfetti(x, y) {
 }
 
 async function toggleTaskCloud(id, currentStatus, event) {
+    const role = localStorage.getItem('role');
     const isNowDone = !currentStatus;
+    
     if (isNowDone && event) createConfetti(event.clientX, event.clientY);
 
+    // Animasi biar smooth
     const taskEl = event.target.closest('.task-item');
     taskEl.classList.add('slide-down');
 
     setTimeout(async () => {
-        await fetch(`${firebaseTugasURL}/${userKelas}/${id}.json`, {
-            method: 'PATCH',
-            body: JSON.stringify({ done: isNowDone })
-        });
+        if (role === 'sekretaris') {
+            // Kalau sekretaris, update ke server (berlaku buat semua)
+            await fetch(`${firebaseTugasURL}/${userKelas}/${id}.json`, {
+                method: 'PATCH',
+                body: JSON.stringify({ done: isNowDone })
+            });
+            
+            // Opsional: Hapus centang pribadi kalau sekretaris sudah resmi nyentang
+            let personalChecks = JSON.parse(localStorage.getItem('personalTaskChecks')) || {};
+            delete personalChecks[id];
+            localStorage.setItem('personalTaskChecks', JSON.stringify(personalChecks));
+            
+        } else {
+            // Kalau siswa biasa, simpan di HP sendiri aja
+            let personalChecks = JSON.parse(localStorage.getItem('personalTaskChecks')) || {};
+            if (isNowDone) {
+                personalChecks[id] = true;
+            } else {
+                delete personalChecks[id];
+            }
+            localStorage.setItem('personalTaskChecks', JSON.stringify(personalChecks));
+        }
+
         window.lastTasksData = ""; 
         loadTasks();
     }, 400);
 }
+
        
     function toggleTaskLocal(index, event) {
     let tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
@@ -1483,4 +1509,4 @@ function logout() {
     <div id="modal-counter"></div>
 </div>
 </body>
-                </html>
+</html>
