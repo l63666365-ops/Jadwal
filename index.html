@@ -653,6 +653,9 @@
     </div> 
        
 <script>
+    const firebaseTugasURL = "https://jadwal-19962-default-rtdb.asia-southeast1.firebasedatabase.app/tugas_cloud";
+    const userKelas = (localStorage.getItem("userKelas") || "UMUM").trim();
+       
     if (localStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'login.html'; // Tendang balik ke  kalau belum 
 }
@@ -1135,70 +1138,111 @@ updateTime();
         container.innerHTML = ""; container.style.display = 'none';
     }
 
-function loadTasks() {
-    const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || []
-    const list = document.getElementById('taskList') 
-    list.innerHTML = ""
+let localTasksCache = [];
+let cloudTasksCache = {};
+
+async function loadTasks() {
+    const list = document.getElementById('taskList');
+    const role = localStorage.getItem('role');
+    const userKelas = (localStorage.getItem("userKelas") || "UMUM").trim();
+
+    // 1. Ambil data Cloud (Firebase)
+    let cloudTasks = {};
+    try {
+        const res = await fetch(`${firebaseTugasURL}/${userKelas}.json`);
+        cloudTasks = await res.json() || {};
+    } catch (e) { console.log("Gagal ambil data cloud"); }
+
+    // 2. Ambil data Lokal
+    let localTasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
+
+    // Gabung dan Sortir: Belum selesai di atas, Urut berdasarkan waktu terbaru
+    const combinedTasks = [];
     
-    // Kita buat list baru yang isinya data tugas + index aslinya
-    const mappedTasks = tasks.map((t, index) => ({ ...t, originalIndex: index }))
-
-    // Pisahin: yang belum beres di atas, yang udah beres di bawah
-    const activeTasks = mappedTasks.filter(t => !t.done)
-    const completedTasks = mappedTasks.filter(t => t.done)
-    const sortedTasks = [...activeTasks, ...completedTasks]
+    // Proses Cloud Tasks
+    Object.keys(cloudTasks).forEach(id => {
+        combinedTasks.push({ id, ...cloudTasks[id], isCloud: true });
+    });
     
-    sortedTasks.forEach((t) => {
-        const i = t.originalIndex // Ini index asli biar nggak salah hapus
-        const li = document.createElement('li') 
-        li.className = `task-item ${t.done ? 'done' : ''}`
-        li.style.flexDirection = "column"
-        li.style.alignItems = "flex-start"
-        li.style.position = "relative"
+    // Proses Local Tasks
+    localTasks.forEach((t, i) => {
+        combinedTasks.push({ id: i, ...t, isCloud: false });
+    });
 
-        let imgsHtml = ""
-        if (t.images && t.images.length > 0) {
-            imgsHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;">`
-            t.images.forEach((imgSrc, imgIndex) => { 
-                imgsHtml += `<img src="${imgSrc}" class="task-img" style="width:80px; height:80px; object-fit:cover;" onclick="openImage(${i}, ${imgIndex})">` 
-            })
-            imgsHtml += `</div>`
-        }
+    // Algoritma Sortir: 
+    // 1. Status 'done' (false dulu baru true)
+    // 2. Timestamp (terbaru di atas)
+    combinedTasks.sort((a, b) => {
+        if (a.done !== b.done) return a.done ? 1 : -1;
+        return b.timestamp - a.timestamp;
+    });
 
-        li.innerHTML = `
-            <div style="display:flex; width:100%; align-items:center; gap:10px;">
-                <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onclick="toggleTask(${i}, event)">
-                <span class="task-text" onclick="toggleTask(${i}, event)">${t.text}</span>
-                <button class="btn-delete-task" onclick="deleteTask(${i})">×</button>
-            </div>
-            ${imgsHtml}
-        `
-        list.appendChild(li)
-    })
+    // 3. Render secara efisien (cegah kedip)
+    // Kalau data sama dengan yang sebelumnya, jangan render ulang total
+    const currentDataString = JSON.stringify(combinedTasks);
+    if (window.lastTasksData === currentDataString) return; 
+    window.lastTasksData = currentDataString;
+
+    list.innerHTML = "";
+    combinedTasks.forEach(t => {
+        const canDelete = t.isCloud ? (role === 'sekretaris') : true;
+        renderTaskItem(t.id, t, t.isCloud, canDelete);
+    });
+}
+       
+       function renderTaskItem(id, t, isCloud, canDelete) {
+    const list = document.getElementById('taskList');
+    const li = document.createElement('li');
+    li.className = `task-item ${t.done ? 'done' : ''}`;
+    li.style.flexDirection = "column";
+    li.style.alignItems = "flex-start";
+    li.style.position = "relative";
+    
+    // Tambahkan atribut data-id buat keperluan animasi
+    li.setAttribute('data-id', id);
+
+    const toggleFunc = isCloud ? `toggleTaskCloud('${id}', ${t.done}, event)` : `toggleTaskLocal(${id}, event)`;
+    const deleteFunc = isCloud ? `deleteTaskCloud('${id}', event)` : `deleteTaskLocal(${id}, event)`;
+
+    li.innerHTML = `
+        <div style="display:flex; width:100%; align-items:center; gap:10px;">
+            <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onclick="${toggleFunc}">
+            <span class="task-text" onclick="${toggleFunc}">${t.text}</span>
+            ${canDelete ? `<button class="btn-delete-task" onclick="${deleteFunc}">×</button>` : ''}
+        </div>
+    `;
+    list.appendChild(li);
 }
 
-
-    function addTask() {
-    const input = document.getElementById('taskInput'); 
+   async function addTask() {
+    const input = document.getElementById('taskInput');
+    const role = localStorage.getItem('role');
     if (input.value.trim() === "" && selectedImagesData.length === 0) return;
-    
-    const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
-    
-    // pakai unshift biar tugas baru masuk ke urutan paling atas (index 0)
-    tasks.unshift({ 
-        text: input.value, 
-        images: [...selectedImagesData], 
-        done: false 
-    }); 
-    
-    localStorage.setItem('mySchoolTasks', JSON.stringify(tasks));
-    
-    input.value = ""; 
-    input.style.height = "45px"; 
-    cancelImage(); 
+
+    const newTask = {
+        text: input.value,
+        images: [...selectedImagesData],
+        done: false,
+        timestamp: Date.now()
+    };
+
+    if (role === 'sekretaris') {
+        await fetch(`${firebaseTugasURL}/${userKelas}.json`, {
+            method: 'POST',
+            body: JSON.stringify(newTask)
+        });
+    } else {
+        let tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
+        tasks.unshift(newTask);
+        localStorage.setItem('mySchoolTasks', JSON.stringify(tasks));
+    }
+
+    input.value = "";
+    cancelImage();
+    window.lastTasksData = ""; // Reset biar render ulang
     loadTasks();
 }
-            
+       
     // Fungsi buat bikin ledakan warna-warni
 function createConfetti(x, y) {
     const colors = ['#ff0000', '#ffea00', '#ff00ff', '#00ff00', '#00eaff', '#ff9100', '#ffffff'];
@@ -1222,71 +1266,67 @@ function createConfetti(x, y) {
     }
 }
 
-function toggleTask(i, event) {
-    let tasks = JSON.parse(localStorage.getItem('mySchoolTasks'));
-    const isNowDone = !tasks[i].done;
-    
-    if (isNowDone && event) {
-        createConfetti(event.clientX, event.clientY);
-    }
+async function toggleTaskCloud(id, currentStatus, event) {
+    const isNowDone = !currentStatus;
+    if (isNowDone && event) createConfetti(event.clientX, event.clientY);
 
-    const taskElements = document.querySelectorAll('.task-item');
-    if (isNowDone) {
-        taskElements[i].classList.add('slide-down');
-    }
+    const taskEl = event.target.closest('.task-item');
+    taskEl.classList.add('slide-down');
+
+    setTimeout(async () => {
+        await fetch(`${firebaseTugasURL}/${userKelas}/${id}.json`, {
+            method: 'PATCH',
+            body: JSON.stringify({ done: isNowDone })
+        });
+        window.lastTasksData = ""; 
+        loadTasks();
+    }, 400);
+}
+       
+    function toggleTaskLocal(index, event) {
+    let tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
+    const isNowDone = !tasks[index].done;
+
+    if (isNowDone && event) createConfetti(event.clientX, event.clientY);
+
+    const taskEl = event.target.closest('.task-item');
+    taskEl.classList.add('slide-down');
 
     setTimeout(() => {
-        tasks[i].done = isNowDone;
-        
-        // sortir: yang belum selesai (done: false) di atas, yang sudah (done: true) di bawah
-        // urutan sesama tugas aktif tetap terjaga karena filter mempertahankan urutan asli
-        const active = tasks.filter(t => !t.done);
-        const completed = tasks.filter(t => t.done);
-        const sortedTasks = [...active, ...completed];
-        
-        localStorage.setItem('mySchoolTasks', JSON.stringify(sortedTasks));
+        tasks[index].done = isNowDone;
+        localStorage.setItem('mySchoolTasks', JSON.stringify(tasks));
+        window.lastTasksData = "";
         loadTasks();
-    }, 600);
+    }, 400);
 }
 
-
-// 2. GANTI FUNGSI LOADTASKS BIAR LEBIH SIMPLE
-function loadTasks() {
-    const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
-    const list = document.getElementById('taskList'); 
-    list.innerHTML = "";
+async function deleteTaskCloud(id, event) {
+    const taskEl = event.target.closest('.task-item');
+    taskEl.style.opacity = '0';
+    taskEl.style.transform = 'translateX(20px)';
     
-    tasks.forEach((t, i) => {
-        const li = document.createElement('li'); 
-        li.className = `task-item ${t.done ? 'done' : ''}`;
-        li.style.flexDirection = "column";
-        li.style.alignItems = "flex-start";
-        li.style.position = "relative";
-
-        let imgsHtml = "";
-        if (t.images && t.images.length > 0) {
-            imgsHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;">`;
-            t.images.forEach((imgSrc, imgIndex) => { 
-                imgsHtml += `<img src="${imgSrc}" class="task-img" style="width:80px; height:80px; object-fit:cover;" onclick="openImage(${i}, ${imgIndex})">`; 
-            });
-            imgsHtml += `</div>`;
-        }
-
-        li.innerHTML = `
-            <div style="display:flex; width:100%; align-items:center; gap:10px;">
-                <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onclick="toggleTask(${i}, event)">
-                <span class="task-text" onclick="toggleTask(${i}, event)">${t.text}</span>
-                <button class="btn-delete-task" onclick="deleteTask(${i})">×</button>
-            </div>
-            ${imgsHtml}
-        `;
-        list.appendChild(li);
-    });
+    setTimeout(async () => {
+        await fetch(`${firebaseTugasURL}/${userKelas}/${id}.json`, { method: 'DELETE' });
+        window.lastTasksData = ""; // Paksa refresh cache
+        loadTasks();
+    }, 300);
 }
 
+function deleteTaskLocal(index, event) {
+    const taskEl = event.target.closest('.task-item');
+    taskEl.style.opacity = '0';
+    taskEl.style.transform = 'translateX(20px)';
 
-    function deleteTask(i) { const tasks = JSON.parse(localStorage.getItem('mySchoolTasks')); tasks.splice(i, 1); localStorage.setItem('mySchoolTasks', JSON.stringify(tasks)); loadTasks(); }
-    
+    setTimeout(() => {
+        let tasks = JSON.parse(localStorage.getItem('mySchoolTasks')) || [];
+        tasks.splice(index, 1);
+        localStorage.setItem('mySchoolTasks', JSON.stringify(tasks));
+        window.lastTasksData = ""; // Paksa refresh cache
+        loadTasks();
+    }, 300);
+}
+       
+       
     function changeBg(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
@@ -1431,6 +1471,7 @@ function logout() {
     window.location.href = 'login.html';
 }
 
+       setInterval(loadTasks, 10000);
 </script>
       <div id="imageModal" class="modal-overlay">
     <div onclick="closeImage()" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:3050;"></div>
