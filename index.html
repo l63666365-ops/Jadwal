@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0.83, maximum-scale=0.83, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=0.84, maximum-scale=0.84, user-scalable=no">
     <title>Jadwal Sekolah Pro - Ocean Indigo Theme</title>
     <style>
         
@@ -1016,19 +1016,54 @@ updateTime();
         renderSchedule();
     }
 
-    function saveJadwal() {
-        saveTemporarily();
-        localStorage.setItem('savedJadwal', JSON.stringify(jadwalData)); 
-        backupJadwal = JSON.parse(JSON.stringify(jadwalData));
-        isEditMode = false;
-        document.getElementById('btn-save-jadwal').style.display = 'none'; 
-        document.getElementById('edit-controls').style.display = 'none';
-        const btn = document.getElementById('btn-edit-mode');
-        btn.innerText = '📌 EDIT JADWAL HARIAN'; 
-        btn.classList.remove('editing');
-        showAlert("Tersimpan", "Jadwal berhasil diperbarui!"); 
-        renderSchedule();
+    async function saveJadwal() {
+    saveTemporarily();
+    const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const dayName = days[currentViewDate.getDay()];
+    const userKelas = localStorage.getItem('userKelas');
+    const weekType = currentWeekType === 'm2' ? '2' : '1';
+
+    // Link GAS sayang (pastikan sudah di-deploy sebagai Web App dan aksesnya 'Anyone')
+    const urlGAS = "https://script.google.com/macros/s/AKfycbyKxqI--waweVMDm8wstIbWSg92UrtiEImN_kZKQil4agGjZdwfiDjf42gs25DI7wVVXQ/exec";
+
+    // 1. Simpan dulu di lokal biar sekretaris nggak nunggu lama
+    localStorage.setItem('savedJadwal', JSON.stringify(jadwalData));
+    backupJadwal = JSON.parse(JSON.stringify(jadwalData));
+
+    // 2. Siapkan data buat dikirim ke Sheets
+    const payload = {
+        kelas: userKelas,
+        minggu: weekType,
+        hari: dayName,
+        jadwal: jadwalData[currentWeekType][dayName] // Kirim array mapel hari itu
+    };
+
+    try {
+        // Kasih info kalau lagi sinkronisasi
+        showAlert("Sinkronisasi", "Sedang mengirim perubahan ke server...");
+
+        const response = await fetch(urlGAS, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            // Kalau sukses, tutup mode edit
+            isEditMode = false;
+            document.getElementById('edit-controls').style.display = 'none';
+            const btn = document.getElementById('btn-edit-mode');
+            btn.innerText = '📌 EDIT JADWAL HARIAN';
+            btn.classList.remove('editing');
+            
+            showAlert("Berhasil!", "Jadwal " + userKelas + " udah diperbarui di server,");
+            renderSchedule();
+        }
+    } catch (error) {
+        // Kalau internet mati, tetep tersimpan di lokal tapi kasih peringatan
+        showAlert("Offline", "Jadwal tersimpan di HP, tapi gagal sinkron ke server, Cek koneksi ya sayang,");
+        console.error("Error saving to sheet:", error);
     }
+}
 
     function checkHighlight() {
     const now = new Date(); 
@@ -1262,28 +1297,41 @@ function loadTasks() {
 
         window.onload = function() {
     const role = localStorage.getItem('role');
+    const userKelas = localStorage.getItem('userKelas');
     const adminSelector = document.getElementById('adminSelector');
     const mainContent = document.getElementById('mainScheduleContent');
     const btnEdit = document.getElementById('btn-edit-mode');
     const btnBack = document.getElementById('btnBackToAdmin');
 
     if (role === 'admin') {
-         const pomoIcon = document.querySelector('.pomo-icon');
+        const pomoIcon = document.querySelector('.pomo-icon');
         if (pomoIcon) pomoIcon.style.display = 'none';
-        // Jika admin, sembunyikan jadwal dulu, tampilkan menu pilih kelas
         adminSelector.style.display = 'flex';
         mainContent.style.display = 'none';
-        
-        // Sesuai permintaan: tombol edit dihapus buat admin
-        if(btnEdit) btnEdit.style.display = 'none';
-        
-        // Munculkan tombol kembali di halaman jadwal
+        if(btnEdit) btnEdit.style.display = 'block';
         btnBack.style.display = 'block';
+    } 
+    else if (role === 'sekretaris') {
+        // Sekretaris langsung liat jadwal kelasnya sendiri
+        adminSelector.style.display = 'none';
+        mainContent.style.display = 'flex';
+        
+        // Munculkan tombol edit khusus buat sekretaris
+        if(btnEdit) btnEdit.style.display = 'block';
+        
+        // Sembunyikan tombol kembali (karena mereka cuma ngurus 1 kelas)
+        if(btnBack) btnBack.style.display = 'none';
+    }
+    else {
+        // Buat user/siswa biasa, sembunyikan tombol edit
+        if(btnEdit) btnEdit.style.display = 'none';
+        adminSelector.style.display = 'none';
+        mainContent.style.display = 'flex';
     }
 
-    // Sisanya tetep jalanin fungsi load data lainnya
     const savedBg = localStorage.getItem('savedBg');
     if (savedBg) document.body.style.backgroundImage = `linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), url('${savedBg}')`;
+    
     updateTime(); 
     setAutoWeek(); 
     renderSchedule(); 
@@ -1394,4 +1442,4 @@ function logout() {
     <div id="modal-counter"></div>
 </div>
 </body>
-    </html>
+                </html>
