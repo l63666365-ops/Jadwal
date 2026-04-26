@@ -3,7 +3,7 @@
 <head>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0.83, maximum-scale=0.83, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=0.84, maximum-scale=0.84, user-scalable=no">
     <title>Login | Ocean Indigo Schedule</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
@@ -238,7 +238,7 @@ function handleLogin() {
             icon: 'error',
             confirmButtonColor: '#00203F'
         });
-        return; // Berhenti di sini kalau email salah
+        return;
     }
 
     // 2. Khusus Admin
@@ -250,7 +250,23 @@ function handleLogin() {
         return;
     }
 
-    // 3. Logika Pembagian Kelas
+    // 3. Khusus Sekretaris (Format: sektkj2@...)
+    if (email.startsWith('sek')) {
+        let rawKelas = email.replace('sek', '').split('@')[0]; // Ambil 'tkj2'
+        
+        // Logika buat nambahin spasi otomatis (biar tkj2 jadi TKJ 2)
+        // Kita pecah antara huruf dan angka
+        let match = rawKelas.match(/[a-z]+|[0-9]+/gi);
+        let kelasFix = match ? match.join(' ').toUpperCase() : rawKelas.toUpperCase();
+
+        localStorage.setItem('role', 'sekretaris');
+        localStorage.setItem('userKelas', kelasFix);
+        localStorage.setItem('isLoggedIn', 'true');
+        window.location.href = './index.html';
+        return;
+    }
+
+    // 4. Logika Pembagian Kelas Berdasarkan ID Siswa
     const idStr = email.split('@')[0];
     const id = parseInt(idStr);
     let kelas = "";
@@ -280,11 +296,11 @@ function handleLogin() {
         localStorage.setItem('isLoggedIn', 'true');
         window.location.href = './index.html';
     } else {
-        // Kalau email bener tapi ID gak ada di list
         errorBox.style.display = 'block';
         errorBox.innerText = "Email atau password yang Anda masukkan salah. Silakan coba lagi.";
     }
 }
+
 
 (function() {
     function fixFontSize() {
@@ -302,4 +318,4 @@ function handleLogin() {
 })();
 </script>
 </body>
-</html>
+            </html>
