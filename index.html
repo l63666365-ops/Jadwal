@@ -1284,7 +1284,7 @@ async function loadTasks() {
                               </div>`;
             } else {
                 // Untuk dokumen (PDF, Word, dll)
-                filesHtml += `<a href="${fileData}" style="text-decoration: none; width: 100%;">
+                filesHtml += `<a href="${fileData}" download="${fileName}" style="text-decoration: none; width: 100%;">
                     <div class="file-box" style="background: #e1e8f0; padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--color-4);">
                         <span style="font-size: 18px;">📄</span>
                         <div style="display:flex; flex-direction:column; overflow: hidden;">
