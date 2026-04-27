@@ -1138,7 +1138,7 @@ updateTime();
         const previewContainer = document.getElementById('imagePreviewContainer');
         previewContainer.style.display = 'flex';
         
-        // Looping semua file yang dipilih sayang
+        // Loop semua file yang dipilih sayang
         Array.from(input.files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -1160,7 +1160,7 @@ updateTime();
                 if (fileType.startsWith('image')) {
                     previewTag = `<img src="${fileData}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">`;
                 } else {
-                    // Tampilan buat dokumen (PDF/Word dsb)
+                    // Tampilan buat dokumen (PDF/Word/Lainnya)
                     previewTag = `<div style="width: 60px; height: 60px; background: var(--color-2); color: white; display: flex; align-items: center; justify-content: center; font-size: 9px; border-radius: 8px; text-align:center; padding: 5px; overflow:hidden;">${fileName.substring(0,10)}...</div>`;
                 }
 
@@ -1171,6 +1171,7 @@ updateTime();
         });
     }
 }
+
 
 
     function removeSpecificImage(index, btn) {
@@ -1256,7 +1257,6 @@ async function loadTasks() {
     li.className = `task-item ${t.done ? 'done' : ''}`;
     li.style.cssText = "flex-direction: column; align-items: flex-start; position: relative;";
     
-    // Perbaikan: Pastikan id cloud dikirim dengan tanda kutip kalau string
     const cloudIdStr = isCloud ? `'${id}'` : 'null';
     const toggleFunc = isCloud ? `toggleTaskCloud('${id}', ${t.done}, event)` : `toggleTaskLocal(${id}, event)`;
     const deleteFunc = isCloud ? `deleteTaskCloud('${id}', event)` : `deleteTaskLocal(${id}, event)`;
@@ -1272,21 +1272,16 @@ async function loadTasks() {
             const fileName = typeof fileObj === 'string' ? "File" : fileObj.name;
 
             if (fileType.startsWith('image')) {
-                // Perbaikan parameter: isCloud dikirim sebagai boolean, dan cloudId dibungkus kutip
                 filesHtml += `<img src="${fileData}" class="task-img" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;" 
                     onclick="openImageFromTask(${isCloud ? -1 : id}, ${idx}, ${cloudIdStr})">`;
-            } else if (fileType.startsWith('video')) {
-                filesHtml += `<video src="${fileData}" controls style="width: 100%; max-height: 200px; border-radius: 8px; margin-top: 5px;"></video>`;
-            } else if (fileType.startsWith('audio')) {
-                filesHtml += `<audio src="${fileData}" controls style="width: 100%; margin-top: 5px;"></audio>`;
             } else {
-                // Dokumen: target="_blank" dan tanpa atribut 'download' biar langsung tampil/preview
+                // Link buat dokumen: target="_blank" biar langsung kebuka
                 filesHtml += `<a href="${fileData}" target="_blank" class="file-attachment" style="text-decoration: none; width: 100%;">
                     <div class="file-box" style="background: #e1e8f0; padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--color-4);">
-                        <span style="font-size: 18px;">📌</span>
+                        <span style="font-size: 18px;">📄</span>
                         <div style="display:flex; flex-direction:column; overflow: hidden;">
                             <b style="color: var(--color-2); font-size: 12px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${fileName}</b>
-                            <span style="font-size: 10px; color: var(--color-3);">Klik untuk melihat dokumen</span>
+                            <span style="font-size: 10px; color: var(--color-3);">Klik untuk membuka dokumen</span>
                         </div>
                     </div>
                 </a>`;
