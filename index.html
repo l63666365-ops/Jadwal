@@ -1282,17 +1282,17 @@ async function loadTasks() {
                                 <audio src="${fileData}" controls style="width: 100%; height:30px;"></audio>
                               </div>`;
             } else {
-                // INI YANG AKU BENERIN: Hapus 'download' dan ganti ke target='_blank'
-                filesHtml += `<a href="${fileData}" target="_blank" style="text-decoration: none; width: 100%; margin-top:5px;">
-                    <div class="file-box" style="background: #e1e8f0; padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--color-4);">
+                // INI SOLUSI AMPUHNYA: Pakai fungsi buat convert ke Blob baru dibuka
+                filesHtml += `
+                    <div class="file-box" style="background: #e1e8f0; padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--color-4); width: 100%; margin-top:5px; cursor: pointer;"
+                         onclick="viewDocument('${fileData}', '${fileType}')">
                         <span style="font-size: 20px;">📄</span>
                         <div style="display:flex; flex-direction:column; overflow: hidden; flex-grow: 1;">
                             <b style="color: var(--color-2); font-size: 12px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${fileName}</b>
-                            <span style="font-size: 10px; color: var(--color-3);">Klik untuk melihat dokumen</span>
+                            <span style="font-size: 10px; color: var(--color-3);">Klik untuk lihat dokumen</span>
                         </div>
                         <span style="font-size: 14px;">👁️</span>
-                    </div>
-                </a>`;
+                    </div>`;
             }
         });
         filesHtml += `</div>`;
@@ -1308,6 +1308,29 @@ async function loadTasks() {
     `;
     list.appendChild(li);
 }
+
+// TAMBAHKAN FUNGSI BARU INI DI BAWAHNYA YA SAYANG
+function viewDocument(base64, type) {
+    try {
+        const bin = atob(base64.split(',')[1]);
+        const array = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) {
+            array[i] = bin.charCodeAt(i);
+        }
+        const blob = new Blob([array], { type: type });
+        const url = URL.createObjectURL(blob);
+        
+        // Coba buka di tab baru
+        const win = window.open(url, '_blank');
+        if (!win) {
+            // Kalau diblokir popup browser, kita arahkan lokasinya langsung
+            window.location.href = url;
+        }
+    } catch (e) {
+        alert("Gagal membuka dokumen, coba lagi ya sayang");
+    }
+}
+
 
 
 
