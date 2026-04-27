@@ -1267,6 +1267,7 @@ async function loadTasks() {
     if (t.images && t.images.length > 0) {
         filesHtml = `<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; width: 100%;">`;
         t.images.forEach((fileObj, idx) => {
+            // Cek apakah data lama (string) atau data baru (object)
             const fileData = typeof fileObj === 'string' ? fileObj : fileObj.data;
             const fileType = typeof fileObj === 'string' ? (fileData.split(';')[0].split(':')[1] || 'image/jpeg') : fileObj.type;
             const fileName = typeof fileObj === 'string' ? "Lampiran File" : fileObj.name;
@@ -1275,24 +1276,23 @@ async function loadTasks() {
                 filesHtml += `<img src="${fileData}" class="task-img" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;" 
                     onclick="openImageFromTask(${isCloud ? -1 : id}, ${idx}, ${cloudIdStr})">`;
             } else if (fileType.startsWith('video')) {
-                filesHtml += `<video src="${fileData}" controls style="width: 100%; max-height: 200px; border-radius: 8px; background: #000; margin-top:5px;"></video>`;
+                filesHtml += `<video src="${fileData}" controls style="width: 100%; max-height: 200px; border-radius: 8px; background: #000;"></video>`;
             } else if (fileType.startsWith('audio')) {
-                filesHtml += `<div style="width:100%; background:#f1f6f9; padding:8px; border-radius:10px; border:1px solid #ccc; margin-top:5px;">
-                                <p style="font-size:10px; margin-bottom:4px;">🎵 ${fileName}</p>
+                filesHtml += `<div style="width:100%; background:#f1f6f9; padding:5px; border-radius:8px; border:1px solid #ccc;">
+                                <p style="font-size:10px; margin-bottom:2px;">🎵 ${fileName}</p>
                                 <audio src="${fileData}" controls style="width: 100%; height:30px;"></audio>
                               </div>`;
             } else {
-                // INI SOLUSI AMPUHNYA: Pakai fungsi buat convert ke Blob baru dibuka
-                filesHtml += `
-                    <div class="file-box" style="background: #e1e8f0; padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--color-4); width: 100%; margin-top:5px; cursor: pointer;"
-                         onclick="viewDocument('${fileData}', '${fileType}')">
-                        <span style="font-size: 20px;">📄</span>
-                        <div style="display:flex; flex-direction:column; overflow: hidden; flex-grow: 1;">
+                // Untuk dokumen (PDF, Word, dll)
+                filesHtml += `<a href="${fileData}" download="${fileName}" style="text-decoration: none; width: 100%;">
+                    <div class="file-box" style="background: #e1e8f0; padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--color-4);">
+                        <span style="font-size: 18px;">📄</span>
+                        <div style="display:flex; flex-direction:column; overflow: hidden;">
                             <b style="color: var(--color-2); font-size: 12px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${fileName}</b>
-                            <span style="font-size: 10px; color: var(--color-3);">Klik untuk lihat dokumen</span>
+                            <span style="font-size: 10px; color: var(--color-3);">Klik untuk unduh/buka dokumen</span>
                         </div>
-                        <span style="font-size: 14px;">👁️</span>
-                    </div>`;
+                    </div>
+                </a>`;
             }
         });
         filesHtml += `</div>`;
@@ -1301,37 +1301,13 @@ async function loadTasks() {
     li.innerHTML = `
         <div style="display:flex; width:100%; align-items:center; gap:10px;">
             <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onclick="${toggleFunc}">
-            <span class="task-text" style="flex-grow: 1; padding-right: 40px !important;">${processedText}</span>
+            <span class="task-text" style="flex-grow: 1;">${processedText}</span>
             ${canDelete ? `<button class="btn-delete-task" onclick="${deleteFunc}">×</button>` : ''}
         </div>
         ${filesHtml}
     `;
     list.appendChild(li);
 }
-
-// TAMBAHKAN FUNGSI BARU INI DI BAWAHNYA YA SAYANG
-function viewDocument(base64, type) {
-    try {
-        const bin = atob(base64.split(',')[1]);
-        const array = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) {
-            array[i] = bin.charCodeAt(i);
-        }
-        const blob = new Blob([array], { type: type });
-        const url = URL.createObjectURL(blob);
-        
-        // Coba buka di tab baru
-        const win = window.open(url, '_blank');
-        if (!win) {
-            // Kalau diblokir popup browser, kita arahkan lokasinya langsung
-            window.location.href = url;
-        }
-    } catch (e) {
-        alert("Gagal membuka dokumen, coba lagi ya sayang");
-    }
-}
-
-
 
 
 
