@@ -1138,6 +1138,7 @@ updateTime();
         const previewContainer = document.getElementById('imagePreviewContainer');
         previewContainer.style.display = 'flex';
         
+        // Loop setiap file yang dipilih (tahan lama di HP/pilih banyak)
         Array.from(input.files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -1145,7 +1146,7 @@ updateTime();
                 const fileType = file.type;
                 const fileName = file.name;
                 
-                // Simpan data file ke array sementara
+                // Masukkan ke daftar antrean upload
                 selectedImagesData.push({
                     data: fileData,
                     type: fileType,
@@ -1157,16 +1158,17 @@ updateTime();
                 
                 let previewTag = "";
                 if (fileType.startsWith('image')) {
-                    previewTag = `<img src="${fileData}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">`;
-                } else if (fileType.startsWith('video')) {
-                    previewTag = `<div style="width: 60px; height: 60px; background: #052659; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; border-radius: 8px;">🎬</div>`;
-                } else if (fileType.startsWith('audio')) {
-                    previewTag = `<div style="width: 60px; height: 60px; background: #5483b3; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; border-radius: 8px;">🎵</div>`;
+                    previewTag = `<img src="${fileData}" style="width: 65px; height: 65px; object-fit: cover; border-radius: 10px; border: 2px solid var(--color-4);">`;
                 } else {
-                    previewTag = `<div style="width: 60px; height: 60px; background: #7da0ca; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; border-radius: 8px; text-align:center; padding: 2px; overflow:hidden;">📄<br>${fileName.substring(0,5)}</div>`;
+                    // Ikon buat dokumen/video/audio
+                    let icon = fileType.startsWith('video') ? "🎬" : fileType.startsWith('audio') ? "🎵" : "📄";
+                    previewTag = `<div style="width: 65px; height: 65px; background: var(--color-5); color: var(--color-2); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; border-radius: 10px; border: 2px solid var(--color-4); text-align:center; padding: 2px; overflow:hidden;">
+                                    <span style="font-size:20px">${icon}</span>
+                                    <div style="white-space:nowrap">${fileName.substring(0,6)}...</div>
+                                  </div>`;
                 }
 
-                wrapper.innerHTML = `${previewTag}<button onclick="removeSpecificImage(${selectedImagesData.length - 1}, this)" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border:none; border-radius:50%; width:18px; height:18px; cursor:pointer;">×</button>`;
+                wrapper.innerHTML = `${previewTag}<button onclick="removeSpecificImage(${selectedImagesData.length - 1}, this)" style="position:absolute; top:-5px; right:-5px; background:#ff4d4d; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">×</button>`;
                 previewContainer.appendChild(wrapper);
             };
             reader.readAsDataURL(file);
@@ -1267,30 +1269,30 @@ async function loadTasks() {
     if (t.images && t.images.length > 0) {
         filesHtml = `<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; width: 100%;">`;
         t.images.forEach((fileObj, idx) => {
-            // Cek apakah data lama (string) atau data baru (object)
             const fileData = typeof fileObj === 'string' ? fileObj : fileObj.data;
             const fileType = typeof fileObj === 'string' ? (fileData.split(';')[0].split(':')[1] || 'image/jpeg') : fileObj.type;
             const fileName = typeof fileObj === 'string' ? "Lampiran File" : fileObj.name;
 
             if (fileType.startsWith('image')) {
-                filesHtml += `<img src="${fileData}" class="task-img" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;" 
+                filesHtml += `<img src="${fileData}" class="task-img" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--color-5);" 
                     onclick="openImageFromTask(${isCloud ? -1 : id}, ${idx}, ${cloudIdStr})">`;
             } else if (fileType.startsWith('video')) {
-                filesHtml += `<video src="${fileData}" controls style="width: 100%; max-height: 200px; border-radius: 8px; background: #000;"></video>`;
+                filesHtml += `<video src="${fileData}" controls style="width: 100%; max-height: 200px; border-radius: 12px; background: #000; margin-top: 5px;"></video>`;
             } else if (fileType.startsWith('audio')) {
-                filesHtml += `<div style="width:100%; background:#f1f6f9; padding:5px; border-radius:8px; border:1px solid #ccc;">
-                                <p style="font-size:10px; margin-bottom:2px;">🎵 ${fileName}</p>
-                                <audio src="${fileData}" controls style="width: 100%; height:30px;"></audio>
+                filesHtml += `<div style="width:100%; background:var(--color-5); padding:8px; border-radius:10px; border:1px solid var(--color-4); margin-top: 5px;">
+                                <p style="font-size:11px; margin-bottom:4px; font-weight: bold; color: var(--color-2);">🎵 ${fileName}</p>
+                                <audio src="${fileData}" controls style="width: 100%; height:35px;"></audio>
                               </div>`;
             } else {
-                // Untuk dokumen (PDF, Word, dll)
-                filesHtml += `<a href="${fileData}" download="${fileName}" style="text-decoration: none; width: 100%;">
-                    <div class="file-box" style="background: #e1e8f0; padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--color-4);">
-                        <span style="font-size: 18px;">📄</span>
-                        <div style="display:flex; flex-direction:column; overflow: hidden;">
-                            <b style="color: var(--color-2); font-size: 12px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${fileName}</b>
-                            <span style="font-size: 10px; color: var(--color-3);">Klik untuk unduh/buka dokumen</span>
+                // ini bagian dokumen yang sayang minta, pakai target="_blank" biar langsung kebuka preview browser
+                filesHtml += `<a href="${fileData}" target="_blank" style="text-decoration: none; width: 100%; margin-top: 5px;">
+                    <div class="file-box" style="background: #ffffff; padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 10px; border: 2px dashed var(--color-3); transition: 0.2s;">
+                        <span style="font-size: 24px;">📄</span>
+                        <div style="display:flex; flex-direction:column; overflow: hidden; flex-grow: 1;">
+                            <b style="color: var(--color-2); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${fileName}</b>
+                            <span style="font-size: 10px; color: var(--color-3);">klik untuk lihat dokumen kesayangan aku</span>
                         </div>
+                        <span style="color: var(--color-3); font-size: 14px;">👁️</span>
                     </div>
                 </a>`;
             }
@@ -1301,7 +1303,7 @@ async function loadTasks() {
     li.innerHTML = `
         <div style="display:flex; width:100%; align-items:center; gap:10px;">
             <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onclick="${toggleFunc}">
-            <span class="task-text" style="flex-grow: 1;">${processedText}</span>
+            <span class="task-text" style="flex-grow: 1; font-size: 14px; line-height: 1.4;">${processedText}</span>
             ${canDelete ? `<button class="btn-delete-task" onclick="${deleteFunc}">×</button>` : ''}
         </div>
         ${filesHtml}
