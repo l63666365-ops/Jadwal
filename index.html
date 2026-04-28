@@ -200,9 +200,11 @@
     cursor: pointer;
     text-align: left;
     padding-right: 40px !important;
-    /* INI KUNCINYA */
-    white-space: pre-wrap; /* Biar enter dan spasi tetep muncul */
-    word-wrap: break-word; /* Biar kata yang kepanjangan nggak nabrak samping */
+    white-space: pre-wrap; /* Menjaga spasi dan enter */
+    word-wrap: break-word; /* Potong kata yang kepanjangan */
+    word-break: break-all; /* Penyelamat untuk link yang super panjang */
+    overflow-wrap: break-word;
+    display: block; /* Pastikan dia memenuhi ruang */
 }
 
         .task-img { display: block; max-width: 100%; border-radius: 8px; margin-top: 8px; border: 1px solid var(--color-5); cursor: pointer; }
@@ -345,11 +347,6 @@
     padding: 0 !important;
     z-index: 10 !important;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
-}
-
-/* Biar teks tugas nggak nabrak tombol X */
-.task-text {
-    padding-right: 40px !important; /* Kasih ruang buat tombol X */
 }
 
 
@@ -1649,4 +1646,4 @@ function logout() {
     <div id="modal-counter"></div>
 </div>
 </body>
-</html>
+    </html>
