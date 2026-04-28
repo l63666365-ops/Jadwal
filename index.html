@@ -202,10 +202,11 @@
     padding-right: 40px !important;
     white-space: pre-wrap; /* Menjaga spasi dan enter */
     word-wrap: break-word; /* Potong kata yang kepanjangan */
-    word-break: break-all; /* Penyelamat untuk link yang super panjang */
-    overflow-wrap: break-word;
-    display: block; /* Pastikan dia memenuhi ruang */
+    word-break: normal;    /* GANTI INI: dari break-all menjadi normal */
+    overflow-wrap: anywhere; /* Menjaga link panjang tetap terpotong tapi kata biasa aman */
+    display: block; 
 }
+
 
         .task-img { display: block; max-width: 100%; border-radius: 8px; margin-top: 8px; border: 1px solid var(--color-5); cursor: pointer; }
 
